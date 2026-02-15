@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
 import 'package:get/get.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/user_controller.dart';
 import 'custom_sidebar.dart';
 
-class HomeView extends GetView<HomeController> {
+class UserView extends StatelessWidget {
+  final UserController controller = Get.put(UserController());
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +24,7 @@ class HomeView extends GetView<HomeController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildHeader(),
+                        _buildHeader(context),
                         const SizedBox(height: 32),
                         _buildSearchBar(),
                         const SizedBox(height: 16),
@@ -48,19 +51,12 @@ class HomeView extends GetView<HomeController> {
       ),
       child: Row(
         children: [
-          const Text("Dashboard",
-              style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18)),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.grey, size: 20),
-            onPressed: controller.refreshUsers,
+            icon: const Icon(Icons.notifications_outlined,
+                color: Colors.grey, size: 20),
+            onPressed: () {},
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.notifications_outlined,
-              color: Colors.grey, size: 20),
           const SizedBox(width: 16),
           const CircleAvatar(
             radius: 16,
@@ -79,7 +75,7 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -103,7 +99,7 @@ class HomeView extends GetView<HomeController> {
           ],
         ),
         ElevatedButton.icon(
-          onPressed: _showAddUserDialog,
+          onPressed: () => _showUserFormDialog(context),
           icon: const Icon(Icons.add, size: 18, color: Colors.white),
           label: const Text("Nouvel utilisateur"),
           style: ElevatedButton.styleFrom(
@@ -133,7 +129,7 @@ class HomeView extends GetView<HomeController> {
         ],
       ),
       child: TextField(
-        onChanged: controller.searchUsers,
+        onChanged: controller.setSearch,
         decoration: InputDecoration(
           hintText: "Rechercher un utilisateur...",
           prefixIcon: const Icon(Icons.search, color: Colors.grey),
@@ -166,19 +162,11 @@ class HomeView extends GetView<HomeController> {
         ],
       ),
       child: Obx(() {
-        if (controller.isLoading.value) {
-          return const Padding(
-              padding: EdgeInsets.all(100.0),
-              child: Center(child: CircularProgressIndicator()));
-        }
-
-        final users = controller.users;
+        final users = controller.filteredUsers;
         if (users.isEmpty) {
           return const Padding(
-              padding: EdgeInsets.all(100.0),
-              child: Center(
-                  child: Text("Aucun utilisateur trouvé",
-                      style: TextStyle(color: Colors.grey))));
+              padding: EdgeInsets.all(40.0),
+              child: Center(child: Text("Aucun utilisateur trouvé")));
         }
 
         return Column(
@@ -203,7 +191,8 @@ class HomeView extends GetView<HomeController> {
               itemCount: users.length,
               separatorBuilder: (_, __) =>
                   Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
-              itemBuilder: (context, index) => _buildUserRow(users[index]),
+              itemBuilder: (context, index) =>
+                  _buildUserRow(context, users[index]),
             ),
           ],
         );
@@ -225,7 +214,7 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildUserRow(User user) {
+  Widget _buildUserRow(BuildContext context, User user) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
       child: Row(
@@ -305,7 +294,7 @@ class HomeView extends GetView<HomeController> {
                   constraints: const BoxConstraints(),
                   icon: const Icon(Icons.edit_outlined,
                       size: 20, color: Colors.grey),
-                  onPressed: () {},
+                  onPressed: () => _showUserFormDialog(context, user: user),
                 ),
                 const SizedBox(width: 12),
                 IconButton(
@@ -342,12 +331,14 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  void _showAddUserDialog() {
-    final name = TextEditingController();
-    final email = TextEditingController();
+  /// Dialogue ajout/modification utilisateur
+  void _showUserFormDialog(BuildContext context, {User? user}) {
+    final isEditing = user != null;
+    final name = TextEditingController(text: user?.name ?? '');
+    final email = TextEditingController(text: user?.email ?? '');
     final password = TextEditingController();
-    final rxRole = "Sélectionner un rôle".obs;
-    final rxConfirmed = true.obs;
+    final rxRole = (user?.role ?? "Sélectionner un rôle").obs;
+    final rxConfirmed = (user?.status == 'Confirmé').obs;
     final rxBlocked = false.obs;
 
     Get.dialog(
@@ -363,15 +354,22 @@ class HomeView extends GetView<HomeController> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Nouvel utilisateur",
-                          style: TextStyle(
+                      Text(
+                          isEditing
+                              ? "Modifier l'utilisateur"
+                              : "Nouvel utilisateur",
+                          style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 4),
-                      Text("Ajoutez un nouvel utilisateur au système.",
-                          style: TextStyle(color: Colors.grey, fontSize: 13)),
+                      const SizedBox(height: 4),
+                      Text(
+                          isEditing
+                              ? "Modifiez les informations de l'utilisateur."
+                              : "Ajoutez un nouvel utilisateur au système.",
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 13)),
                     ],
                   ),
                   IconButton(
@@ -461,29 +459,33 @@ class HomeView extends GetView<HomeController> {
                   )),
               const SizedBox(height: 16),
 
-              /// Mot de passe
-              const Text("Mot de passe",
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: password,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "******",
-                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+              if (!isEditing) ...[
+                /// Mot de passe (seulement à la création)
+                const Text("Mot de passe",
+                    style:
+                        TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: password,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: "******",
+                    hintStyle:
+                        const TextStyle(color: Colors.grey, fontSize: 14),
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
 
               /// Switches
               Row(
@@ -519,17 +521,28 @@ class HomeView extends GetView<HomeController> {
                     elevation: 0,
                   ),
                   onPressed: () {
-                    controller.createUser(
-                      name.text,
-                      email.text,
+                    final updatedUser = User(
+                      id: isEditing
+                          ? user.id
+                          : DateTime.now().millisecondsSinceEpoch,
+                      name: name.text,
+                      email: email.text,
                       role: rxRole.value == "Sélectionner un rôle"
                           ? "Authenticated"
                           : rxRole.value,
+                      status: rxConfirmed.value ? 'Confirmé' : 'En attente',
+                      registeredAt:
+                          isEditing ? user.registeredAt : DateTime.now(),
                     );
+                    if (isEditing) {
+                      controller.updateUser(updatedUser);
+                    } else {
+                      controller.addUser(updatedUser);
+                    }
                     Get.back();
                   },
-                  child: const Text("Enregistrer",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(isEditing ? "Mettre à jour" : "Enregistrer",
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
