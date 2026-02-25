@@ -1,0 +1,62 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Flutter (Windows)",
+			"type": "shell",
+			"command": "C:\\dev_mobile\\flutter\\bin\\flutter.bat",
+			"args": [
+				"run",
+				"-d",
+				"windows"
+			],
+			"isBackground": true,
+			"options": {
+				"cwd": "${workspaceFolder}",
+				"shell": {
+					"executable": "C:\\Windows\\System32\\cmd.exe"
+				}
+			}
+		},
+		{
+			"label": "Flutter Version Check",
+			"type": "shell",
+			"command": "C:\\dev_mobile\\flutter\\bin\\flutter.bat",
+			"args": [
+				"--version"
+			],
+			"isBackground": false,
+			"options": {
+				"cwd": "${workspaceFolder}",
+				"shell": {
+					"executable": "C:\\Windows\\System32\\cmd.exe"
+				}
+			}
+		},
+		{
+			"label": "Flutter One Shot (Check + Run)",
+			"type": "shell",
+			"command": "powershell.exe",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"${workspaceFolder}\\.vscode\\flutter_run_check.ps1"
+			],
+			"isBackground": true,
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "Copilot Flutter Version Check",
+			"type": "shell",
+			"command": "C:\\dev_mobile\\flutter\\bin\\flutter.bat",
+			"args": [
+				"--version"
+			],
+			"isBackground": false
+		}
+	]
+}
