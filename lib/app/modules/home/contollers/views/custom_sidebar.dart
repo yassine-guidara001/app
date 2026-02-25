@@ -5,7 +5,6 @@ import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dar
 
 class CustomSidebar extends StatelessWidget {
   const CustomSidebar({super.key});
-
   @override
   Widget build(BuildContext context) {
     final HomeController controller = Get.find<HomeController>();
@@ -111,7 +110,7 @@ class CustomSidebar extends StatelessWidget {
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 CircleAvatar(
                   radius: 16,
@@ -147,7 +146,7 @@ class CustomSidebar extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFE2E8F0)),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.logout, size: 18, color: Colors.grey),
@@ -175,19 +174,19 @@ class CustomSidebar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           margin: const EdgeInsets.only(bottom: 4),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF1664FF) : Colors.transparent,
+            color: isSelected ? const Color(0xFFE0F2FE) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
               Icon(icon,
-                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  color: isSelected ? Colors.blue : const Color(0xFF64748B),
                   size: 20),
               const SizedBox(width: 12),
               Text(
                 title,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                  color: isSelected ? Colors.blue : const Color(0xFF1E293B),
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   fontSize: 14,
                 ),

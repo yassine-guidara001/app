@@ -13,6 +13,7 @@ abstract class Routes {
   static const EQUIPMENTS = '/equipments';
   static const USERS = '/users';
   static const RESERVATIONS = '/reservations';
+  static const CREATE_SPACE = '/create-space';
 
   /// AUTRES
   static const PROFILE = '/profile';

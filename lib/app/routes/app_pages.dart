@@ -6,6 +6,7 @@ import 'package:flutter_getx_app/app/modules/home/contollers/views/reservations_
 import 'package:flutter_getx_app/app/modules/home/contollers/views/user_view.dart';
 import 'package:flutter_getx_app/app/modules/spaces/controllers/spaces_controller.dart';
 import 'package:flutter_getx_app/app/modules/spaces/views/spaces_view.dart';
+import 'package:flutter_getx_app/app/modules/spaces/views/create_space_view.dart';
 import 'package:get/get.dart';
 
 // Pages
@@ -39,6 +40,13 @@ class AppPages {
       binding: BindingsBuilder(() {
         Get.lazyPut<SpaceController>(() => SpaceController(), fenix: true);
         Get.put(HomeController(), permanent: true);
+      }),
+    ),
+    GetPage(
+      name: Routes.CREATE_SPACE,
+      page: () => const CreateSpaceView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<SpaceController>(() => SpaceController(), fenix: true);
       }),
     ),
     GetPage(

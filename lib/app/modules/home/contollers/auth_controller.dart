@@ -1,70 +1,180 @@
-import 'dart:convert';
+import 'package:flutter_getx_app/app/core/service/http_service.dart';
+import 'package:flutter_getx_app/app/core/service/storage_service.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
 
 class AuthController extends GetxController {
   final isLoading = false.obs;
-  final storage = const FlutterSecureStorage();
+  final HttpService httpService = Get.find<HttpService>();
+  final StorageService storageService = Get.find<StorageService>();
 
-  final String baseUrl = "http://193.111.250.244:3046";
+  /// Extraire le token de la réponse (essaie différentes clés)
+  String? _extractToken(Map<String, dynamic> body) {
+    final token = body['jwt'] ??
+        body['token'] ??
+        body['accessToken'] ??
+        body['access_token'];
+    if (token != null && token.toString().isNotEmpty) {
+      print('✅ Token trouvé: ${token.toString().substring(0, 20)}...');
+      return token.toString();
+    }
+    return null;
+  }
 
-  Future<void> loginUser(String email, String password) async {
-    if (email.isEmpty || password.isEmpty) {
-      Get.snackbar("Erreur", "Veuillez remplir tous les champs");
+  // 🔐 LOGIN
+  Future<void> loginUser(String identifier, String password) async {
+    if (identifier.trim().isEmpty || password.trim().isEmpty) {
+      Get.snackbar('Erreur', 'Remplir tous les champs');
       return;
     }
 
     isLoading.value = true;
 
     try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/api/auth/local"),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode({
-          "identifier": email,
-          "password": password,
-        }),
-      );
+      print('🔐 Tentative login...');
+      final response = await httpService.postAuth('/api/auth/local', {
+        "identifier": identifier,
+        "password": password,
+      });
 
-      print("LOGIN STATUS: ${response.statusCode}");
-      print("LOGIN BODY: ${response.body}");
+      print(
+          '📥 Response: statusCode=${response.statusCode}, body=${response.body}');
+
+      // Vérifier si statusCode est null (erreur réseau)
+      if (response.statusCode == null || response.statusCode == 0) {
+        Get.snackbar('Erreur', response.statusText ?? 'Erreur réseau');
+        return;
+      }
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final String jwt = data['jwt'];
+        if (response.body == null || response.body is! Map) {
+          Get.snackbar('Erreur', 'Réponse serveur invalide');
+          return;
+        }
 
-        await storage.write(key: 'jwt', value: jwt);
+        final token = _extractToken(response.body as Map<String, dynamic>);
 
-        Get.snackbar("Succès", "Connecté avec succès");
+        if (token == null) {
+          print('❌ Token NOT found in response');
+          print('📋 Available keys: ${(response.body as Map).keys.toList()}');
+          Get.snackbar('Erreur', 'Pas de token reçu du serveur');
+          return;
+        }
+
+        // Sauvegarder le token
+        await storageService.saveToken(token);
+
+        final user = response.body['user'];
+        if (user != null) {
+          await storageService.saveUserData(user);
+          final username =
+              user is Map ? (user['username'] ?? 'Utilisateur') : 'Utilisateur';
+          Get.snackbar('Succès', 'Bienvenue $username');
+        } else {
+          Get.snackbar('Succès', 'Connexion réussie');
+        }
+
         Get.offAllNamed(Routes.HOME);
       } else {
-        final error = jsonDecode(response.body);
-        Get.snackbar(
-          "Erreur",
-          error['error']?['message'] ?? "Login échoué",
-        );
+        // Erreur du serveur — tenter d'extraire un message détaillé
+        String serverMsg = response.statusText ?? 'Connexion échouée';
+        try {
+          if (response.body is Map) {
+            final body = response.body as Map;
+            serverMsg =
+                body['error']?['message'] ?? body['message'] ?? serverMsg;
+          }
+        } catch (_) {}
+
+        print('⚠️ Login failed: $serverMsg');
+        Get.snackbar('Erreur', serverMsg);
       }
     } catch (e) {
-      print(e);
-      Get.snackbar("Erreur", "Impossible de se connecter au serveur");
+      print('❌ Login exception: $e');
+      Get.snackbar('Erreur', 'Erreur: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
   Future<void> logout() async {
-    await storage.http.delete(key: 'jwt');
+    await storageService.logout();
     Get.offAllNamed(Routes.LOGIN);
   }
-}
 
-class FlutterSecureStorage {
-  const FlutterSecureStorage();
-  
-  get http => null;
-  
-  Future<void> write({required String key, required String value}) async {}
+  // 🔐 REGISTER
+  Future<void> registerUser(
+      String username, String email, String password) async {
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      Get.snackbar('Erreur', 'Remplir tous les champs');
+      return;
+    }
+
+    isLoading.value = true;
+
+    try {
+      print('🔐 Tentative register...');
+      final response = await httpService.postAuth('/api/auth/local/register', {
+        "username": username,
+        "email": email,
+        "password": password,
+      });
+
+      print(
+          '📥 Response: statusCode=${response.statusCode}, body=${response.body}');
+
+      // Vérifier si statusCode est null (erreur réseau)
+      if (response.statusCode == null || response.statusCode == 0) {
+        Get.snackbar('Erreur', response.statusText ?? 'Erreur réseau');
+        return;
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.body == null || response.body is! Map) {
+          Get.snackbar('Succès', 'Inscription réussie - Connectez-vous');
+          Get.offAllNamed(Routes.LOGIN);
+          return;
+        }
+
+        final token = _extractToken(response.body as Map<String, dynamic>);
+
+        if (token == null) {
+          print('❌ Token NOT found after register');
+          print('📋 Available keys: ${(response.body as Map).keys.toList()}');
+          Get.snackbar('Succès', 'Inscription réussie - Connectez-vous');
+          Get.offAllNamed(Routes.LOGIN);
+          return;
+        }
+
+        // Auto-login: sauvegarder le token
+        await storageService.saveToken(token);
+
+        final user = response.body['user'];
+        if (user != null) {
+          await storageService.saveUserData(user);
+        }
+
+        Get.snackbar('Succès', 'Inscription et connexion réussies');
+        Get.offAllNamed(Routes.HOME);
+      } else {
+        // Erreur du serveur — afficher message détaillé si disponible
+        String serverMsg = response.statusText ?? 'Inscription échouée';
+        try {
+          if (response.body is Map) {
+            final body = response.body as Map;
+            serverMsg =
+                body['error']?['message'] ?? body['message'] ?? serverMsg;
+          }
+        } catch (_) {}
+
+        print('⚠️ Register failed: $serverMsg');
+        Get.snackbar('Erreur', serverMsg);
+      }
+    } catch (e) {
+      print('❌ Register exception: $e');
+      Get.snackbar('Erreur', 'Erreur: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }
