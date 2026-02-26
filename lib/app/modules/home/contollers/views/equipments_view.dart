@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/equipment_controller.dart';
+import 'package:flutter_getx_app/app/data/models/equipment_model.dart';
 import 'custom_sidebar.dart';
 
 class EquipmentsView extends StatelessWidget {
@@ -206,6 +207,7 @@ class EquipmentsView extends StatelessWidget {
         }
 
         final items = controller.equipments;
+
         return Column(
           children: [
             Padding(
@@ -315,7 +317,8 @@ class EquipmentsView extends StatelessWidget {
                   constraints: const BoxConstraints(),
                   icon: const Icon(Icons.delete_outline,
                       size: 18, color: Color(0xFF94A3B8)),
-                  onPressed: () => controller.deleteEquipment(equipment.id),
+                  onPressed: () =>
+                      controller.deleteEquipment(equipment.documentId),
                 ),
               ],
             ),
@@ -335,10 +338,13 @@ class EquipmentsView extends StatelessWidget {
         textColor = const Color(0xFF166534);
         break;
       case 'Maintenance':
+      case 'En maitenance':
+      case 'En maintenance':
         bgColor = const Color(0xFFFFFBEB);
         textColor = const Color(0xFF92400E);
         break;
       case 'Occupé':
+      case 'En panne':
         bgColor = const Color(0xFFFEF2F2);
         textColor = const Color(0xFF991B1B);
         break;
@@ -361,6 +367,30 @@ class EquipmentsView extends StatelessWidget {
   }
 
   void _showEquipmentFormDialog(BuildContext context, {Equipment? equipment}) {
+    const statusItems = ["Disponible", "En panne", "En maitenance"];
+    const spaceItems = [
+      "Aucun",
+      "Espace Alpha",
+      "Espace Fatma",
+      "Espace fati",
+    ];
+
+    String normalizeStatusForDropdown(String raw) {
+      final v = raw.trim().toLowerCase().replaceAll('_', ' ');
+      if (v == 'en maitenance' || v == 'en maintenance' || v == 'maintenance') {
+        return 'En maitenance';
+      }
+      if (v == 'en panne' || v == 'panne' || v == 'occupé') return 'En panne';
+      return 'Disponible';
+    }
+
+    String normalizeSpaceForDropdown(String raw) {
+      final value = raw.trim();
+      if (value.isEmpty) return 'Aucun';
+      if (spaceItems.contains(value)) return value;
+      return 'Aucun';
+    }
+
     final isEditing = equipment != null;
     final nameController = TextEditingController(text: equipment?.name ?? '');
     final typeController = TextEditingController(text: equipment?.type ?? '');
@@ -375,8 +405,38 @@ class EquipmentsView extends StatelessWidget {
     final descriptionController =
         TextEditingController(text: equipment?.description ?? '');
     final notesController = TextEditingController(text: equipment?.notes ?? '');
-    final rxStatus = (equipment?.status ?? "Disponible").obs;
-    final rxSpace = (equipment?.space ?? "Aucun").obs;
+    final rxStatus =
+        normalizeStatusForDropdown(equipment?.status ?? "Disponible").obs;
+    final rxSpace = normalizeSpaceForDropdown(equipment?.space ?? "Aucun").obs;
+
+    Future<void> pickDate(TextEditingController target) async {
+      DateTime initialDate = DateTime.now();
+
+      // Supporte dd/MM/yyyy
+      final raw = target.text.trim();
+      final m = RegExp(r'^(\d{2})/(\d{2})/(\d{4})$').firstMatch(raw);
+      if (m != null) {
+        final dd = int.tryParse(m.group(1) ?? '');
+        final mm = int.tryParse(m.group(2) ?? '');
+        final yyyy = int.tryParse(m.group(3) ?? '');
+        if (dd != null && mm != null && yyyy != null) {
+          initialDate = DateTime(yyyy, mm, dd);
+        }
+      }
+
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: initialDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100),
+      );
+
+      if (picked == null) return;
+      final dd = picked.day.toString().padLeft(2, '0');
+      final mm2 = picked.month.toString().padLeft(2, '0');
+      final yyyy2 = picked.year.toString();
+      target.text = '$dd/$mm2/$yyyy2';
+    }
 
     Get.dialog(
       Dialog(
@@ -434,8 +494,8 @@ class EquipmentsView extends StatelessWidget {
                             "Numéro de série", serialController)),
                     const SizedBox(width: 24),
                     Expanded(
-                        child: _buildDialogDropdown("Statut", rxStatus,
-                            ["Disponible", "Maintenance", "Occupé"])),
+                        child: _buildDialogDropdown(
+                            "Statut", rxStatus, statusItems)),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -444,7 +504,9 @@ class EquipmentsView extends StatelessWidget {
                     Expanded(
                         child: _buildDialogField(
                             "Date d'achat", "jj/mm/aaaa", dateController,
-                            icon: Icons.calendar_today_outlined)),
+                            icon: Icons.calendar_today_outlined,
+                            readOnly: true,
+                            onTap: () => pickDate(dateController))),
                     const SizedBox(width: 24),
                     Expanded(
                         child: _buildDialogField(
@@ -455,17 +517,14 @@ class EquipmentsView extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildDialogField("Expiration de la garantie", "jj/mm/aaaa",
                     warrantyController,
-                    icon: Icons.calendar_today_outlined),
+                    icon: Icons.calendar_today_outlined,
+                    readOnly: true,
+                    onTap: () => pickDate(warrantyController)),
                 const SizedBox(height: 16),
                 SizedBox(
                     width: 200,
                     child: _buildDialogDropdown(
-                        "Espaces (Optionnel)", rxSpace, [
-                      "Aucun",
-                      "Espace Alpha",
-                      "Espace Fatma",
-                      "Espace fati"
-                    ])),
+                        "Espaces (Optionnel)", rxSpace, spaceItems)),
                 const SizedBox(height: 16),
                 _buildDialogField("Description", "Description détaillée...",
                     descriptionController,
@@ -497,6 +556,7 @@ class EquipmentsView extends StatelessWidget {
                           id: isEditing
                               ? equipment.id
                               : DateTime.now().millisecondsSinceEpoch,
+                          documentId: isEditing ? equipment.documentId : '',
                           name: nameController.text,
                           type: typeController.text,
                           serialNumber: serialController.text,
@@ -539,7 +599,11 @@ class EquipmentsView extends StatelessWidget {
 
   Widget _buildDialogField(
       String label, String hint, TextEditingController controller,
-      {bool isNumber = false, int maxLines = 1, IconData? icon}) {
+      {bool isNumber = false,
+      int maxLines = 1,
+      IconData? icon,
+      bool readOnly = false,
+      VoidCallback? onTap}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -553,12 +617,20 @@ class EquipmentsView extends StatelessWidget {
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           maxLines: maxLines,
+          readOnly: readOnly,
+          showCursor: !readOnly,
+          onTap: onTap,
           style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
             suffixIcon: icon != null
-                ? Icon(icon, size: 18, color: Colors.black54)
+                ? IconButton(
+                    onPressed: onTap,
+                    icon: Icon(icon, size: 18, color: Colors.black54),
+                    splashRadius: 18,
+                    tooltip: 'Choisir une date',
+                  )
                 : null,
             filled: true,
             fillColor: const Color(0xFFF8FAFC),

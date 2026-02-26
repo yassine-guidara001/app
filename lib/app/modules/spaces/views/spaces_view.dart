@@ -356,7 +356,7 @@ class SpacesView extends GetView<SpaceController> {
                   IconButton(
                     icon: const Icon(Icons.delete_outline,
                         size: 18, color: Colors.red),
-                    onPressed: () => _confirmDelete(space),
+                    onPressed: () => controller.delete(space.documentId),
                   ),
                 ],
               ),
@@ -420,28 +420,5 @@ class SpacesView extends GetView<SpaceController> {
     if (normalized == 'occupied') return 'Occupé';
     if (normalized == 'maintenance') return 'Maintenance';
     return value;
-  }
-
-  Future<void> _confirmDelete(Space space) async {
-    final confirmed = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Confirmer la suppression'),
-        content: Text('Supprimer "${space.name}" ?'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () => Get.back(result: true),
-            child: const Text('Supprimer'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await controller.delete(space.documentId);
-    }
   }
 }
