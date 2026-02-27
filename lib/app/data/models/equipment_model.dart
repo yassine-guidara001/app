@@ -3,128 +3,131 @@ class Equipment {
   final String documentId;
   final String name;
   final String type;
-  final String serialNumber;
   final String status;
+  final String serialNumber;
   final String purchaseDate;
   final double purchasePrice;
+  final double pricePerDay;
   final String warrantyExpiration;
-  final String space;
   final String description;
   final String notes;
 
+  // 👇 رجعناهم
+  final List<int> spaceIds;
+  final String spaceLabel;
+
   Equipment({
     required this.id,
-    this.documentId = '',
+    required this.documentId,
     required this.name,
     required this.type,
-    required this.serialNumber,
     required this.status,
+    required this.serialNumber,
     required this.purchaseDate,
     required this.purchasePrice,
+    this.pricePerDay = 0,
     required this.warrantyExpiration,
-    required this.space,
-    this.description = '',
-    this.notes = '',
+    required this.description,
+    required this.notes,
+    required this.spaceIds,
+    required this.spaceLabel,
   });
 
-  static int _toInt(dynamic v, {int fallback = 0}) {
-    if (v == null) return fallback;
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return int.tryParse(v.toString()) ?? fallback;
-  }
-
-  static double _toDouble(dynamic v, {double fallback = 0}) {
-    if (v == null) return fallback;
-    if (v is double) return v;
-    if (v is num) return v.toDouble();
-    return double.tryParse(v.toString()) ?? fallback;
-  }
-
-  static String _toStr(dynamic v, {String fallback = ''}) {
-    if (v == null) return fallback;
-    final s = v.toString();
-    return s;
-  }
-
   factory Equipment.fromJson(Map<String, dynamic> json) {
-    final attrs = json['attributes'];
-    final a = attrs is Map<String, dynamic> ? attrs : json;
+    List<int> spaces = [];
+    String spaceLabel = "Aucun";
 
-    final rawDocumentId = json['documentId'] ??
-        json['document_id'] ??
-        a['documentId'] ??
-        a['document_id'];
+    if (json['spaces'] != null && json['spaces'] is List) {
+      spaces = List<int>.from(
+        json['spaces'].map((e) => e['id']),
+      );
 
-    final name = _toStr(a['name']);
-    final type = _toStr(a['type']);
-    final serialNumber = _toStr(a['serial_number']);
-    final status = _toStr(
-      a['status'],
-      fallback: _toStr(a['mystatus'], fallback: 'Disponible'),
-    );
-    final purchaseDate = _toStr(a['purchase_date']);
-    final warrantyExpiration = _toStr(a['warranty_expiry']);
-    final purchasePrice = _toDouble(a['purchase_price']);
-    final description = _toStr(a['description']);
-    final notes = _toStr(a['notes']);
-
-    final spaceLabel = _extractFirstSpaceLabel(a);
+      if (json['spaces'].isNotEmpty) {
+        spaceLabel = json['spaces'][0]['name'] ?? "Aucun";
+      }
+    }
 
     return Equipment(
-      id: _toInt(json['id']),
-      documentId: _toStr(rawDocumentId).trim(),
-      name: name,
-      type: type,
-      serialNumber: serialNumber,
-      status: status.isEmpty ? 'Disponible' : status,
-      purchaseDate: purchaseDate,
-      purchasePrice: purchasePrice,
-      warrantyExpiration: warrantyExpiration,
-      space: spaceLabel,
-      description: description,
-      notes: notes,
+      id: json['id'] ?? 0,
+      documentId: json['documentId'] ?? '',
+      name: json['name'] ?? '',
+      type: json['type'] ?? '',
+      status: json['mystatus'] ?? '',
+      serialNumber: json['serial_number'] ?? '',
+      purchaseDate: json['purchase_date'] ?? '',
+      purchasePrice: (json['purchase_price'] ?? 0).toDouble(),
+      pricePerDay: (json['price_per_day'] ?? 0).toDouble(),
+      warrantyExpiration: json['warranty_expiry'] ?? '',
+      description: json['description'] ?? '',
+      notes: json['notes'] ?? '',
+      spaceIds: spaces,
+      spaceLabel: spaceLabel,
     );
   }
 
-  static String _extractFirstSpaceLabel(Map<String, dynamic> a) {
-    final rel = a['spaces'];
+  static String? _normalizeDate(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return null;
 
-    // Strapi v4 classique: { data: [ { id, attributes: {name} } ] }
-    if (rel is Map) {
-      final data = rel['data'];
-      if (data is List && data.isNotEmpty) {
-        final first = data.first;
-        if (first is Map) {
-          final firstAttrs = first['attributes'];
-          final n = (firstAttrs is Map) ? firstAttrs['name'] : null;
-          if (n != null && n.toString().trim().isNotEmpty) {
-            return n.toString();
-          }
-          final id = first['id'];
-          return id?.toString() ?? 'Aucun';
-        }
-      }
-      return 'Aucun';
+    final iso = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+    if (iso.hasMatch(value)) return value;
+
+    final fr = RegExp(r'^(\d{2})/(\d{2})/(\d{4})$').firstMatch(value);
+    if (fr != null) {
+      final dd = fr.group(1)!;
+      final mm = fr.group(2)!;
+      final yyyy = fr.group(3)!;
+      return '$yyyy-$mm-$dd';
     }
 
-    // Strapi (observé): spaces: [ {id, name, ...} ] ou [id,...]
-    if (rel is List) {
-      if (rel.isEmpty) return 'Aucun';
-      final first = rel.first;
-      if (first is Map) {
-        final n = first['name'];
-        if (n != null && n.toString().trim().isNotEmpty) {
-          return n.toString();
-        }
-        final id = first['id'] ?? first['documentId'] ?? first['document_id'];
-        return id?.toString() ?? 'Aucun';
-      }
-      if (first is int || first is num || first is String) {
-        return first.toString();
-      }
+    return null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final safeName = name.trim().isEmpty ? 'Sans nom' : name.trim();
+    final safeType = type.trim().isEmpty ? 'Autre' : type.trim();
+    final safeStatus = status.trim().isEmpty ? 'Disponible' : status.trim();
+    final safeSerial = serialNumber.trim().isEmpty
+        ? DateTime.now().millisecondsSinceEpoch.toString()
+        : serialNumber.trim();
+
+    final payload = <String, dynamic>{
+      "name": safeName,
+      "type": safeType,
+      "mystatus": safeStatus,
+      "serial_number": safeSerial,
+    };
+
+    final normalizedPurchaseDate = _normalizeDate(purchaseDate);
+    if (normalizedPurchaseDate != null) {
+      payload["purchase_date"] = normalizedPurchaseDate;
     }
 
-    return 'Aucun';
+    if (purchasePrice > 0) {
+      payload["purchase_price"] = purchasePrice;
+    }
+
+    final normalizedWarrantyDate = _normalizeDate(warrantyExpiration);
+    if (normalizedWarrantyDate != null) {
+      payload["warranty_expiry"] = normalizedWarrantyDate;
+    }
+
+    if (description.trim().isNotEmpty) {
+      payload["description"] = description.trim();
+    }
+
+    if (notes.trim().isNotEmpty) {
+      payload["notes"] = notes.trim();
+    }
+
+    if (spaceIds.isNotEmpty) {
+      payload["spaces"] = spaceIds;
+    }
+
+    payload["price_per_day"] = pricePerDay > 0 ? pricePerDay : 0;
+
+    return {
+      "data": payload,
+    };
   }
 }

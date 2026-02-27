@@ -1,97 +1,129 @@
 import 'package:get/get.dart';
-import 'package:flutter_getx_app/app/data/services/equipment_service.dart';
-import 'package:flutter_getx_app/app/data/models/equipment_model.dart';
+import '../../../data/models/equipment_model.dart';
+import '../../../data/services/equipment_service.dart';
+import '../../../core/service/storage_service.dart';
 
 class EquipmentController extends GetxController {
-  final equipmentList = <Equipment>[].obs;
+  final StorageService _storageService = Get.find<StorageService>();
+  EquipmentService? _service;
 
-  // Back-compat pour l'UI existante
-  RxList<Equipment> get equipments => equipmentList;
+  var equipments = <Equipment>[].obs;
+  var isLoading = false.obs;
 
-  final _allEquipments = <Equipment>[];
-  final isLoading = false.obs;
-  final searchQuery = ''.obs;
+  String? _readToken() {
+    final token = _storageService.getToken() ??
+        _storageService.read<String>('jwt') ??
+        _storageService.read<String>('token');
+    if (token == null || token.trim().isEmpty) return null;
+    return token.trim();
+  }
+
+  EquipmentService _getService() {
+    final token = _readToken();
+
+    final currentService = _service;
+    if (currentService != null && currentService.token == token) {
+      return currentService;
+    }
+
+    final created = EquipmentService(token);
+    _service = created;
+    return created;
+  }
 
   @override
   void onInit() {
-    super.onInit();
+    _service = null;
     fetchEquipments();
+    super.onInit();
   }
 
+  /// ===============================
+  /// FETCH
+  /// ===============================
   Future<void> fetchEquipments() async {
-    isLoading.value = true;
-
     try {
-      final items = await EquipmentApi.getEquipments(populate: true);
+      isLoading(true);
 
-      _allEquipments
-        ..clear()
-        ..addAll(items);
+      final result = await _getService().fetchEquipments();
 
-      searchEquipments(searchQuery.value);
+      equipments.assignAll(result);
     } catch (e) {
-      print('❌ fetchEquipments error: $e');
+      Get.snackbar("Erreur", e.toString());
     } finally {
-      isLoading.value = false;
+      isLoading(false);
     }
   }
 
+  /// ===============================
+  /// ADD
+  /// ===============================
   Future<void> addEquipment(Equipment equipment) async {
-    isLoading.value = true;
     try {
-      await EquipmentApi.createEquipment(equipment);
+      isLoading(true);
+
+      await _getService().addEquipment(equipment);
       await fetchEquipments();
+
+      Get.snackbar("Succès", "Équipement ajouté avec succès");
     } catch (e) {
-      print('❌ addEquipment error: $e');
+      Get.snackbar("Erreur", e.toString());
     } finally {
-      isLoading.value = false;
+      isLoading(false);
     }
   }
 
+  /// ===============================
+  /// UPDATE
+  /// ===============================
   Future<void> updateEquipment(Equipment equipment) async {
-    isLoading.value = true;
     try {
-      final documentId = equipment.documentId.trim();
-      if (documentId.isEmpty) {
-        throw Exception(
-            'documentId manquant: impossible de modifier cet équipement');
-      }
-      await EquipmentApi.updateEquipment(documentId, equipment);
+      isLoading(true);
+
+      await _getService().updateEquipment(equipment);
       await fetchEquipments();
+
+      Get.snackbar("Succès", "Équipement modifié avec succès");
     } catch (e) {
-      print('❌ updateEquipment error: $e');
+      Get.snackbar("Erreur", e.toString());
     } finally {
-      isLoading.value = false;
+      isLoading(false);
     }
   }
 
+  /// ===============================
+  /// DELETE
+  /// ===============================
   Future<void> deleteEquipment(String documentId) async {
-    isLoading.value = true;
     try {
-      final trimmed = documentId.trim();
-      if (trimmed.isEmpty) {
-        throw Exception(
-            'documentId manquant: impossible de supprimer cet équipement');
-      }
-      await EquipmentApi.deleteEquipment(trimmed);
-      await fetchEquipments();
+      isLoading(true);
+
+      await _getService().deleteEquipment(documentId);
+
+      equipments.removeWhere((e) => e.documentId == documentId);
+
+      Get.snackbar("Succès", "Équipement supprimé");
     } catch (e) {
-      print('❌ deleteEquipment error: $e');
+      Get.snackbar("Erreur", e.toString());
     } finally {
-      isLoading.value = false;
+      isLoading(false);
     }
   }
 
+  /// ===============================
+  /// SEARCH
+  /// ===============================
   void searchEquipments(String query) {
-    searchQuery.value = query;
     if (query.isEmpty) {
-      equipmentList.value = List.from(_allEquipments);
+      fetchEquipments();
     } else {
-      equipmentList.value = _allEquipments
-          .where((e) =>
-              e.name.toLowerCase().contains(query.toLowerCase()) ||
-              e.type.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      final filtered = equipments.where(
+        (e) =>
+            e.name.toLowerCase().contains(query.toLowerCase()) ||
+            e.type.toLowerCase().contains(query.toLowerCase()),
+      );
+
+      equipments.assignAll(filtered.toList());
     }
   }
 }

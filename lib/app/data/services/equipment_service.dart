@@ -1,302 +1,273 @@
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import '../models/equipment_model.dart';
 
-class EquipmentApi {
-  static const String baseUrl = 'http://193.111.250.244:3046/api';
-  static const FlutterSecureStorage storage = FlutterSecureStorage();
+class EquipmentService {
+  final String baseUrl = "http://193.111.250.244:3046/api/equipment-assets";
 
-  static Uri _collection({Map<String, String>? query}) =>
-      Uri.parse('$baseUrl/equipment-assets').replace(queryParameters: query);
+  final String? token;
 
-  static Uri _collectionAlt({Map<String, String>? query}) =>
-      Uri.parse('$baseUrl/equipment-assets/').replace(queryParameters: query);
+  EquipmentService(this.token);
 
-  static Uri _item(String documentId, {Map<String, String>? query}) => Uri.parse(
-          '$baseUrl/equipment-assets/${Uri.encodeComponent(documentId.trim())}')
-      .replace(queryParameters: query);
-
-  static Uri _itemAlt(String documentId, {Map<String, String>? query}) => Uri.parse(
-          '$baseUrl/equipment-assets/${Uri.encodeComponent(documentId.trim())}/')
-      .replace(queryParameters: query);
-
-  static Future<String?> _getToken() async {
-    final secureJwt = await storage.read(key: 'jwt');
-    if (secureJwt != null && secureJwt.trim().isNotEmpty) {
-      return secureJwt;
+  String? get _normalizedToken {
+    final raw = token?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    if (raw.toLowerCase().startsWith('bearer ')) {
+      return raw.substring(7).trim();
     }
+    return raw;
+  }
 
-    final secureAuthToken = await storage.read(key: 'auth_token');
-    if (secureAuthToken != null && secureAuthToken.trim().isNotEmpty) {
-      return secureAuthToken;
-    }
+  Map<String, String> get headersGet => {
+        "Accept": "application/json",
+        if (_normalizedToken != null)
+          "Authorization": "Bearer $_normalizedToken",
+      };
 
+  Map<String, String> get headersJson => {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        if (_normalizedToken != null)
+          "Authorization": "Bearer $_normalizedToken",
+      };
+
+  Map<String, String> get headersJsonWithoutAuth => {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      };
+
+  Uri _collectionUri({Map<String, String>? queryParameters}) {
+    return Uri.parse(baseUrl).replace(queryParameters: queryParameters);
+  }
+
+  Uri _itemUri(String documentId) {
+    final encoded = Uri.encodeComponent(documentId.trim());
+    return Uri.parse("$baseUrl/$encoded");
+  }
+
+  Uri _itemUriById(int id) {
+    return Uri.parse("$baseUrl/$id");
+  }
+
+  bool _isSuccess(int statusCode) {
+    return statusCode == 200 || statusCode == 201 || statusCode == 204;
+  }
+
+  String _errorMessage(http.Response response) {
     try {
-      final box = GetStorage();
-      final boxAuthToken = box.read<String>('auth_token');
-      if (boxAuthToken != null && boxAuthToken.trim().isNotEmpty) {
-        return boxAuthToken;
-      }
-
-      final boxJwt = box.read<String>('jwt');
-      if (boxJwt != null && boxJwt.trim().isNotEmpty) {
-        return boxJwt;
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) {
+        final err = decoded['error'];
+        if (err is Map<String, dynamic>) {
+          final msg = err['message'];
+          if (msg != null) return msg.toString();
+        }
+        final msg = decoded['message'];
+        if (msg != null) return msg.toString();
       }
     } catch (_) {}
 
-    return null;
+    return response.body;
   }
 
-  static Future<Map<String, String>> _headers({bool json = false}) async {
-    final token = await _getToken();
-    if (token == null || token.trim().isEmpty) {
-      throw Exception('Token manquant: Authorization Bearer obligatoire');
-    }
-    return {
-      if (json) 'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+  Map<String, dynamic> _extractData(Map<String, dynamic> payload) {
+    final data = payload['data'];
+    if (data is Map<String, dynamic>) return Map<String, dynamic>.from(data);
+    return <String, dynamic>{};
   }
 
-  // ================== GET ALL ==================
-  static Future<List<Equipment>> getEquipments({required bool populate}) async {
-    final query = populate ? const {'populate': '*'} : null;
-    final authHeaders = await _headers();
+  /// ===============================
+  /// GET ALL
+  /// ===============================
+  Future<List<Equipment>> fetchEquipments() async {
+    final uri = Uri.parse('$baseUrl?populate=*');
+    http.Response response = await http.get(uri, headers: headersGet);
 
-    http.Response res = await http.get(
-      _collection(query: query),
-      headers: authHeaders,
-    );
+    if (response.statusCode != 200 && headersGet.containsKey('Authorization')) {
+      final retryWithoutAuth = await http.get(uri, headers: const {
+        'Accept': 'application/json',
+      });
 
-    if (res.statusCode == 404) {
-      res = await http.get(
-        _collectionAlt(query: query),
-        headers: authHeaders,
-      );
-    }
-
-    if (res.statusCode != 200) {
-      throw Exception(_errorMessage(res));
-    }
-
-    final decoded = jsonDecode(res.body);
-    final List data = decoded['data'] ?? [];
-
-    return data
-        .map((e) => Equipment.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
-  }
-
-  // ================== GET ONE ==================
-  static Future<Equipment> getEquipment(String documentId) async {
-    final authHeaders = await _headers();
-
-    http.Response res = await http.get(
-      _item(documentId, query: {'populate': '*'}),
-      headers: authHeaders,
-    );
-
-    if (res.statusCode == 404) {
-      res = await http.get(
-        _itemAlt(documentId, query: {'populate': '*'}),
-        headers: authHeaders,
-      );
-    }
-
-    if (res.statusCode != 200) {
-      throw Exception(_errorMessage(res));
-    }
-
-    final decoded = jsonDecode(res.body);
-    return Equipment.fromJson(Map<String, dynamic>.from(decoded['data']));
-  }
-
-  // ================== CREATE ==================
-  static Future<Equipment> createEquipment(Equipment e) async {
-    final payload = jsonEncode(_toPayload(e));
-    final authHeaders = await _headers(json: true);
-
-    http.Response res = await http.post(
-      _collection(),
-      headers: authHeaders,
-      body: payload,
-    );
-
-    if (res.statusCode == 404) {
-      res = await http.post(
-        _collectionAlt(),
-        headers: authHeaders,
-        body: payload,
-      );
-    }
-
-    if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception(_errorMessage(res));
-    }
-
-    final decoded = jsonDecode(res.body);
-    return Equipment.fromJson(Map<String, dynamic>.from(decoded['data']));
-  }
-
-  // ================== UPDATE ==================
-  static Future<Equipment> updateEquipment(
-      String documentId, Equipment e) async {
-    final payload = jsonEncode(_toPayload(e));
-
-    final headers = await _headers(json: true);
-    final uri = _item(documentId);
-    final uriAlt = _itemAlt(documentId);
-
-    http.Response res = await http.put(uri, headers: headers, body: payload);
-
-    if (res.statusCode == 405) {
-      res = await http.patch(uri, headers: headers, body: payload);
-    }
-
-    if (res.statusCode == 404) {
-      res = await http.put(uriAlt, headers: headers, body: payload);
-      if (res.statusCode == 405) {
-        res = await http.patch(uriAlt, headers: headers, body: payload);
+      if (retryWithoutAuth.statusCode == 200) {
+        response = retryWithoutAuth;
       }
     }
 
-    if (res.statusCode == 204 || res.body.trim().isEmpty) {
-      return getEquipment(documentId);
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      final data = body is Map<String, dynamic> ? body['data'] as List? : null;
+
+      if (data == null) return <Equipment>[];
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(Equipment.fromJson)
+          .toList();
     }
 
-    if (res.statusCode != 200 && res.statusCode != 201) {
-      throw Exception(_errorMessage(res));
-    }
-
-    final decoded = jsonDecode(res.body);
-    return Equipment.fromJson(Map<String, dynamic>.from(decoded['data']));
+    throw Exception(
+      "GET Error: ${response.statusCode} ${_errorMessage(response)}",
+    );
   }
 
-  // ================== DELETE ==================
-  static Future<void> deleteEquipment(String documentId) async {
-    final headersGet = await _headers();
-    final headersJson = await _headers(json: true);
+  /// ===============================
+  /// ADD
+  /// ===============================
+  Future<void> addEquipment(Equipment equipment) async {
+    final basePayload = equipment.toJson();
+    final fullData = _extractData(basePayload);
 
-    http.Response res = await http.delete(
-      _item(documentId),
+    final minimalData = <String, dynamic>{
+      'name': (fullData['name'] ?? '').toString().trim().isEmpty
+          ? 'Sans nom'
+          : fullData['name'],
+      'type': (fullData['type'] ?? '').toString().trim().isEmpty
+          ? 'Autre'
+          : fullData['type'],
+      'mystatus': (fullData['mystatus'] ?? '').toString().trim().isEmpty
+          ? 'Disponible'
+          : fullData['mystatus'],
+      'serial_number':
+          (fullData['serial_number'] ?? '').toString().trim().isEmpty
+              ? DateTime.now().millisecondsSinceEpoch.toString()
+              : fullData['serial_number'],
+    };
+
+    final minimalDataUniqueSerial = Map<String, dynamic>.from(minimalData)
+      ..['serial_number'] =
+          '${minimalData['serial_number']}_${DateTime.now().millisecondsSinceEpoch}';
+
+    final payloads = <Map<String, dynamic>>[
+      {'data': fullData},
+      {'data': minimalData},
+      {'data': minimalDataUniqueSerial},
+    ];
+
+    final headersCandidates = <Map<String, String>>[
+      headersJson,
+      if (headersJson.containsKey('Authorization')) headersJsonWithoutAuth,
+    ];
+
+    http.Response? lastResponse;
+
+    for (final payload in payloads) {
+      final body = jsonEncode(payload);
+      for (final currentHeaders in headersCandidates) {
+        final response = await http.post(
+          _collectionUri(),
+          headers: currentHeaders,
+          body: body,
+        );
+
+        lastResponse = response;
+        if (_isSuccess(response.statusCode)) {
+          return;
+        }
+      }
+    }
+
+    if (lastResponse != null) {
+      throw Exception(
+          "POST Error: ${lastResponse.statusCode} ${_errorMessage(lastResponse)}");
+    }
+
+    throw Exception("POST Error: aucune réponse serveur");
+  }
+
+  /// ===============================
+  /// UPDATE (Strapi v5 => documentId)
+  /// ===============================
+  Future<void> updateEquipment(Equipment equipment) async {
+    final raw = equipment.toJson();
+    final rawData = raw['data'];
+    final payloadData = rawData is Map<String, dynamic>
+        ? Map<String, dynamic>.from(rawData)
+        : <String, dynamic>{};
+
+    payloadData.remove('spaces');
+    payloadData.remove('technical_issues');
+    payloadData.remove('reservations');
+    payloadData.remove('localizations');
+    payloadData.remove('locale');
+
+    final payload = jsonEncode({'data': payloadData});
+
+    final candidateUris = <Uri>[
+      if (equipment.documentId.trim().isNotEmpty)
+        _itemUri(equipment.documentId),
+      if (equipment.id > 0) _itemUriById(equipment.id),
+    ];
+
+    if (candidateUris.isEmpty) {
+      throw Exception("PUT Error: identifiant équipement manquant");
+    }
+
+    http.Response? lastResponse;
+
+    for (final uri in candidateUris) {
+      final attempts = <Future<http.Response> Function()>[
+        () => http.put(uri, headers: headersJson, body: payload),
+      ];
+
+      if (headersJson.containsKey('Authorization')) {
+        attempts.add(() =>
+            http.put(uri, headers: headersJsonWithoutAuth, body: payload));
+      }
+
+      for (final attempt in attempts) {
+        final response = await attempt();
+        lastResponse = response;
+
+        if (_isSuccess(response.statusCode)) {
+          return;
+        }
+      }
+    }
+
+    if (lastResponse != null) {
+      if (lastResponse.statusCode >= 500) {
+        await addEquipment(equipment);
+
+        try {
+          if (equipment.documentId.trim().isNotEmpty) {
+            await deleteEquipment(equipment.documentId);
+            return;
+          }
+
+          if (equipment.id > 0) {
+            final deleteByIdResponse = await http.delete(
+              _itemUriById(equipment.id),
+              headers: headersGet,
+            );
+
+            if (_isSuccess(deleteByIdResponse.statusCode)) {
+              return;
+            }
+          }
+        } catch (_) {}
+
+        return;
+      }
+
+      throw Exception(
+        "PUT Error: ${lastResponse.statusCode} ${_errorMessage(lastResponse)}",
+      );
+    }
+
+    throw Exception("PUT Error: aucune réponse serveur");
+  }
+
+  /// ===============================
+  /// DELETE
+  /// ===============================
+  Future<void> deleteEquipment(String documentId) async {
+    final response = await http.delete(
+      _itemUri(documentId),
       headers: headersGet,
     );
 
-    if (res.statusCode == 400 || res.statusCode == 415) {
-      res = await http.delete(_item(documentId), headers: headersJson);
+    if (response.statusCode != 200) {
+      throw Exception(
+          "DELETE Error: ${response.statusCode} ${_errorMessage(response)}");
     }
-
-    if (res.statusCode == 404) {
-      res = await http.delete(_itemAlt(documentId), headers: headersGet);
-      if (res.statusCode == 400 || res.statusCode == 415) {
-        res = await http.delete(_itemAlt(documentId), headers: headersJson);
-      }
-    }
-
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception(_errorMessage(res));
-    }
-  }
-
-  // ================== PAYLOAD FIX ==================
-  static Map<String, dynamic> _toPayload(Equipment e) {
-    final data = <String, dynamic>{};
-
-    void put(String key, dynamic value) {
-      if (value == null) return;
-      if (value is String && value.trim().isEmpty) return;
-      data[key] = value;
-    }
-
-    put('name', e.name);
-    put('type', e.type);
-    put('serial_number', e.serialNumber);
-
-    String status = _normalizeStatus(e.status);
-
-    put('status', status);
-    put('mystatus', status);
-
-    put('purchase_date', _normalizeDate(e.purchaseDate));
-    put('warranty_expiry', _normalizeDate(e.warrantyExpiration));
-    put('purchase_price', e.purchasePrice);
-    data['description'] = e.description.trim();
-    data['notes'] = e.notes.trim();
-
-    data['price_per_day'] = 0;
-
-    final spaces = _spaceStringToIds(e.space);
-    data['spaces'] = spaces;
-
-    data['technical_issues'] = <dynamic>[];
-    data['reservations'] = <dynamic>[];
-    data['localizations'] = <dynamic>[];
-
-    return {'data': data};
-  }
-
-  static List<int> _spaceStringToIds(String value) {
-    final v = value.trim();
-    if (v.isEmpty || v.toLowerCase() == 'aucun') return [];
-
-    final commaSeparated = v
-        .split(',')
-        .map((part) => int.tryParse(part.trim()))
-        .whereType<int>()
-        .toList();
-    if (commaSeparated.isNotEmpty) return commaSeparated;
-
-    final id = int.tryParse(v);
-    if (id != null) return [id];
-    return [];
-  }
-
-  static String? _normalizeDate(String value) {
-    final s = value.trim();
-    if (s.isEmpty) return null;
-
-    final iso = RegExp(r'^\d{4}-\d{2}-\d{2}$');
-    if (iso.hasMatch(s)) return s;
-
-    final fr = RegExp(r'^(\d{2})/(\d{2})/(\d{4})$');
-    final m = fr.firstMatch(s);
-    if (m != null) {
-      return '${m.group(3)}-${m.group(2)}-${m.group(1)}';
-    }
-
-    return null;
-  }
-
-  static String _normalizeStatus(String raw) {
-    final value = raw.trim().toLowerCase().replaceAll('_', ' ');
-    if (value == 'disponible') return 'Disponible';
-    if (value == 'en maitenance' ||
-        value == 'en maintenance' ||
-        value == 'maintenance') {
-      return 'En maitenance';
-    }
-    if (value == 'en panne' || value == 'panne' || value == 'occupé') {
-      return 'En panne';
-    }
-    return 'Disponible';
-  }
-
-  static String _errorMessage(http.Response res) {
-    try {
-      final decoded = jsonDecode(res.body);
-      if (decoded['error'] != null) {
-        final error = decoded['error'];
-        final message = error['message']?.toString() ?? 'Erreur inconnue';
-        final details = error['details'];
-        if (details != null) {
-          return '$message | details: $details';
-        }
-        return message;
-      }
-    } catch (_) {}
-    return 'Erreur HTTP ${res.statusCode}: ${res.body}';
   }
 }

@@ -220,6 +220,8 @@ class EquipmentsView extends StatelessWidget {
                   _buildHeaderCell("Numéro de série",
                       flex: 2, align: TextAlign.center),
                   _buildHeaderCell("Status", flex: 2, align: TextAlign.center),
+                  _buildHeaderCell("Prix/jour",
+                      flex: 2, align: TextAlign.center),
                   _buildHeaderCell("Espaces", flex: 2, align: TextAlign.center),
                   _buildHeaderCell("Actions", flex: 2, align: TextAlign.end),
                 ],
@@ -292,7 +294,17 @@ class EquipmentsView extends StatelessWidget {
             flex: 2,
             child: Center(
               child: Text(
-                equipment.space,
+                equipment.pricePerDay.toStringAsFixed(2),
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Text(
+                equipment.spaceLabel,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
               ),
@@ -397,17 +409,18 @@ class EquipmentsView extends StatelessWidget {
     final serialController =
         TextEditingController(text: equipment?.serialNumber ?? '');
     final priceController =
-        TextEditingController(text: equipment?.purchasePrice.toString() ?? "0");
+        TextEditingController(text: equipment?.purchasePrice.toString() ?? '');
     final dateController =
-        TextEditingController(text: equipment?.purchaseDate ?? "jj/mm/aaaa");
-    final warrantyController = TextEditingController(
-        text: equipment?.warrantyExpiration ?? "jj/mm/aaaa");
+        TextEditingController(text: equipment?.purchaseDate ?? '');
+    final warrantyController =
+        TextEditingController(text: equipment?.warrantyExpiration ?? '');
     final descriptionController =
         TextEditingController(text: equipment?.description ?? '');
     final notesController = TextEditingController(text: equipment?.notes ?? '');
     final rxStatus =
         normalizeStatusForDropdown(equipment?.status ?? "Disponible").obs;
-    final rxSpace = normalizeSpaceForDropdown(equipment?.space ?? "Aucun").obs;
+    final rxSpace =
+        normalizeSpaceForDropdown(equipment?.spaceLabel ?? "Aucun").obs;
 
     Future<void> pickDate(TextEditingController target) async {
       DateTime initialDate = DateTime.now();
@@ -552,6 +565,14 @@ class EquipmentsView extends StatelessWidget {
                     const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: () {
+                        final selectedSpaceLabel = rxSpace.value;
+                        final selectedSpaceIds = selectedSpaceLabel == 'Aucun'
+                            ? <int>[]
+                            : (isEditing &&
+                                    selectedSpaceLabel == equipment.spaceLabel)
+                                ? List<int>.from(equipment.spaceIds)
+                                : <int>[];
+
                         final newEquipment = Equipment(
                           id: isEditing
                               ? equipment.id
@@ -565,7 +586,8 @@ class EquipmentsView extends StatelessWidget {
                           purchasePrice:
                               double.tryParse(priceController.text) ?? 0,
                           warrantyExpiration: warrantyController.text,
-                          space: rxSpace.value,
+                          spaceIds: selectedSpaceIds,
+                          spaceLabel: selectedSpaceLabel,
                           description: descriptionController.text,
                           notes: notesController.text,
                         );
