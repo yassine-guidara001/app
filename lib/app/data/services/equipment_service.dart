@@ -116,61 +116,21 @@ class EquipmentService {
     final basePayload = equipment.toJson();
     final fullData = _extractData(basePayload);
 
-    final minimalData = <String, dynamic>{
-      'name': (fullData['name'] ?? '').toString().trim().isEmpty
-          ? 'Sans nom'
-          : fullData['name'],
-      'type': (fullData['type'] ?? '').toString().trim().isEmpty
-          ? 'Autre'
-          : fullData['type'],
-      'mystatus': (fullData['mystatus'] ?? '').toString().trim().isEmpty
-          ? 'Disponible'
-          : fullData['mystatus'],
-      'serial_number':
-          (fullData['serial_number'] ?? '').toString().trim().isEmpty
-              ? DateTime.now().millisecondsSinceEpoch.toString()
-              : fullData['serial_number'],
-    };
+    final payload = jsonEncode({'data': fullData});
 
-    final minimalDataUniqueSerial = Map<String, dynamic>.from(minimalData)
-      ..['serial_number'] =
-          '${minimalData['serial_number']}_${DateTime.now().millisecondsSinceEpoch}';
+    final response = await http.post(
+      _collectionUri(),
+      headers: headersJson,
+      body: payload,
+    );
 
-    final payloads = <Map<String, dynamic>>[
-      {'data': fullData},
-      {'data': minimalData},
-      {'data': minimalDataUniqueSerial},
-    ];
-
-    final headersCandidates = <Map<String, String>>[
-      headersJson,
-      if (headersJson.containsKey('Authorization')) headersJsonWithoutAuth,
-    ];
-
-    http.Response? lastResponse;
-
-    for (final payload in payloads) {
-      final body = jsonEncode(payload);
-      for (final currentHeaders in headersCandidates) {
-        final response = await http.post(
-          _collectionUri(),
-          headers: currentHeaders,
-          body: body,
-        );
-
-        lastResponse = response;
-        if (_isSuccess(response.statusCode)) {
-          return;
-        }
-      }
+    if (_isSuccess(response.statusCode)) {
+      return;
     }
 
-    if (lastResponse != null) {
-      throw Exception(
-          "POST Error: ${lastResponse.statusCode} ${_errorMessage(lastResponse)}");
-    }
-
-    throw Exception("POST Error: aucune réponse serveur");
+    throw Exception(
+      "POST Error: ${response.statusCode} ${_errorMessage(response)}",
+    );
   }
 
   /// ===============================
@@ -183,7 +143,6 @@ class EquipmentService {
         ? Map<String, dynamic>.from(rawData)
         : <String, dynamic>{};
 
-    payloadData.remove('spaces');
     payloadData.remove('technical_issues');
     payloadData.remove('reservations');
     payloadData.remove('localizations');
@@ -204,50 +163,15 @@ class EquipmentService {
     http.Response? lastResponse;
 
     for (final uri in candidateUris) {
-      final attempts = <Future<http.Response> Function()>[
-        () => http.put(uri, headers: headersJson, body: payload),
-      ];
+      final response = await http.put(uri, headers: headersJson, body: payload);
+      lastResponse = response;
 
-      if (headersJson.containsKey('Authorization')) {
-        attempts.add(() =>
-            http.put(uri, headers: headersJsonWithoutAuth, body: payload));
-      }
-
-      for (final attempt in attempts) {
-        final response = await attempt();
-        lastResponse = response;
-
-        if (_isSuccess(response.statusCode)) {
-          return;
-        }
+      if (_isSuccess(response.statusCode)) {
+        return;
       }
     }
 
     if (lastResponse != null) {
-      if (lastResponse.statusCode >= 500) {
-        await addEquipment(equipment);
-
-        try {
-          if (equipment.documentId.trim().isNotEmpty) {
-            await deleteEquipment(equipment.documentId);
-            return;
-          }
-
-          if (equipment.id > 0) {
-            final deleteByIdResponse = await http.delete(
-              _itemUriById(equipment.id),
-              headers: headersGet,
-            );
-
-            if (_isSuccess(deleteByIdResponse.statusCode)) {
-              return;
-            }
-          }
-        } catch (_) {}
-
-        return;
-      }
-
       throw Exception(
         "PUT Error: ${lastResponse.statusCode} ${_errorMessage(lastResponse)}",
       );
@@ -260,12 +184,19 @@ class EquipmentService {
   /// DELETE
   /// ===============================
   Future<void> deleteEquipment(String documentId) async {
+    final trimmedDocumentId = documentId.trim();
+    if (trimmedDocumentId.isEmpty) {
+      throw Exception(
+        "DELETE Error: identifiant équipement manquant",
+      );
+    }
+
     final response = await http.delete(
-      _itemUri(documentId),
+      _itemUri(trimmedDocumentId),
       headers: headersGet,
     );
 
-    if (response.statusCode != 200) {
+    if (!_isSuccess(response.statusCode)) {
       throw Exception(
           "DELETE Error: ${response.statusCode} ${_errorMessage(response)}");
     }

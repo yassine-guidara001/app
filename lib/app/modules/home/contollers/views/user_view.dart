@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
+import 'package:flutter_getx_app/app/data/models/user_model.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/user_controller.dart';
 import 'custom_sidebar.dart';
 
@@ -162,6 +162,13 @@ class UserView extends StatelessWidget {
         ],
       ),
       child: Obx(() {
+        if (controller.isLoading.value) {
+          return const Padding(
+            padding: EdgeInsets.all(30),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         final users = controller.filteredUsers;
         if (users.isEmpty) {
           return const Padding(
@@ -225,7 +232,7 @@ class UserView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user.name,
+                Text(user.username,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 15)),
                 const SizedBox(height: 2),
@@ -272,14 +279,14 @@ class UserView extends StatelessWidget {
           /// Statut
           Expanded(
             flex: 2,
-            child: _buildStatusBadge(user.status),
+            child: _buildStatusBadge(_statusText(user)),
           ),
 
           /// Inscrit le
           Expanded(
             flex: 2,
             child: Text(
-              "${user.registeredAt.day.toString().padLeft(2, '0')}/${user.registeredAt.month.toString().padLeft(2, '0')}/${user.registeredAt.year}",
+              "${user.createdAt.day.toString().padLeft(2, '0')}/${user.createdAt.month.toString().padLeft(2, '0')}/${user.createdAt.year}",
               style: const TextStyle(color: Color(0xFF475569)),
             ),
           ),
@@ -302,7 +309,7 @@ class UserView extends StatelessWidget {
                   constraints: const BoxConstraints(),
                   icon: const Icon(Icons.delete_outline,
                       size: 20, color: Colors.grey),
-                  onPressed: () => controller.deleteUser(user.id),
+                  onPressed: () => _confirmDelete(user),
                 ),
               ],
             ),
@@ -312,18 +319,52 @@ class UserView extends StatelessWidget {
     );
   }
 
+  String _statusText(User user) {
+    if (user.blocked) return 'Bloqué';
+    if (user.confirmed) return 'Confirmé';
+    return 'En attente';
+  }
+
+  void _confirmDelete(User user) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Confirmation'),
+        content: Text(
+          'Supprimer l\'utilisateur ${user.username} ?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              controller.removeUser(user.id);
+            },
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStatusBadge(String status) {
+    final isBlocked = status.trim().toLowerCase() == 'bloqué';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
+        color: isBlocked ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFDCFCE7)),
+        border: Border.all(
+          color: isBlocked ? const Color(0xFFFECACA) : const Color(0xFFDCFCE7),
+        ),
       ),
       child: Text(
         status,
-        style: const TextStyle(
-          color: Color(0xFF166534),
+        style: TextStyle(
+          color: isBlocked ? const Color(0xFF991B1B) : const Color(0xFF166534),
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
@@ -334,12 +375,23 @@ class UserView extends StatelessWidget {
   /// Dialogue ajout/modification utilisateur
   void _showUserFormDialog(BuildContext context, {User? user}) {
     final isEditing = user != null;
-    final name = TextEditingController(text: user?.name ?? '');
+    final name = TextEditingController(text: user?.username ?? '');
     final email = TextEditingController(text: user?.email ?? '');
     final password = TextEditingController();
+    const roles = <String>[
+      "Authenticated",
+      "Public",
+      "SUPER_ADMIN",
+      "Etudiant",
+      "Enseignant",
+      "Gestionnaire d'espace",
+      "Admin",
+      "Professionnel",
+      "Association",
+    ];
     final rxRole = (user?.role ?? "Sélectionner un rôle").obs;
-    final rxConfirmed = (user?.status == 'Confirmé').obs;
-    final rxBlocked = false.obs;
+    final rxConfirmed = (user?.confirmed ?? true).obs;
+    final rxBlocked = (user?.blocked ?? false).obs;
 
     Get.dialog(
       Dialog(
@@ -439,21 +491,26 @@ class UserView extends StatelessWidget {
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
-                        value: rxRole.value == "Sélectionner un rôle"
-                            ? null
-                            : rxRole.value,
-                        hint: Text(rxRole.value,
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 14)),
+                        value:
+                            roles.contains(rxRole.value) ? rxRole.value : null,
+                        hint: const Text(
+                          "Sélectionner un rôle",
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
                         isExpanded: true,
-                        items: ["Admin", "Authenticated", "Staff"]
-                            .map((String value) {
+                        icon: const Icon(Icons.keyboard_arrow_down,
+                            size: 18, color: Color(0xFF9CA3AF)),
+                        items: roles.map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
                             child: Text(value),
                           );
                         }).toList(),
-                        onChanged: (val) => rxRole.value = val!,
+                        onChanged: (val) {
+                          if (val != null) {
+                            rxRole.value = val;
+                          }
+                        },
                       ),
                     ),
                   )),
@@ -492,14 +549,28 @@ class UserView extends StatelessWidget {
                 children: [
                   Obx(() => Switch(
                         value: rxConfirmed.value,
-                        onChanged: (val) => rxConfirmed.value = val,
+                        onChanged: (val) {
+                          if (val) {
+                            rxConfirmed.value = true;
+                            rxBlocked.value = false;
+                          } else {
+                            rxConfirmed.value = false;
+                          }
+                        },
                         activeColor: Colors.blue,
                       )),
                   const Text("Confirmé", style: TextStyle(fontSize: 14)),
                   const SizedBox(width: 24),
                   Obx(() => Switch(
                         value: rxBlocked.value,
-                        onChanged: (val) => rxBlocked.value = val,
+                        onChanged: (val) {
+                          if (val) {
+                            rxBlocked.value = true;
+                            rxConfirmed.value = false;
+                          } else {
+                            rxBlocked.value = false;
+                          }
+                        },
                         activeColor: Colors.blue,
                       )),
                   const Text("Bloqué", style: TextStyle(fontSize: 14)),
@@ -522,22 +593,28 @@ class UserView extends StatelessWidget {
                   ),
                   onPressed: () {
                     final updatedUser = User(
-                      id: isEditing
-                          ? user.id
-                          : DateTime.now().millisecondsSinceEpoch,
-                      name: name.text,
+                      id: isEditing ? user.id : 0,
+                      username: name.text.trim(),
                       email: email.text,
                       role: rxRole.value == "Sélectionner un rôle"
                           ? "Authenticated"
                           : rxRole.value,
-                      status: rxConfirmed.value ? 'Confirmé' : 'En attente',
-                      registeredAt:
-                          isEditing ? user.registeredAt : DateTime.now(),
+                      confirmed: rxConfirmed.value,
+                      blocked: rxBlocked.value,
+                      createdAt: isEditing ? user.createdAt : DateTime.now(),
                     );
                     if (isEditing) {
-                      controller.updateUser(updatedUser);
+                      controller.editUser(
+                        updatedUser,
+                        password: password.text.trim().isEmpty
+                            ? null
+                            : password.text.trim(),
+                      );
                     } else {
-                      controller.addUser(updatedUser);
+                      controller.addUser(
+                        updatedUser,
+                        password: password.text.trim(),
+                      );
                     }
                     Get.back();
                   },

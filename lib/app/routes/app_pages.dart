@@ -1,6 +1,8 @@
 import 'package:flutter_getx_app/app/modules/home/contollers/equipment_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/course_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/user_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/equipments_view.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/courses_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/home_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/reservations_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/user_view.dart';
@@ -69,6 +71,14 @@ class AppPages {
       page: () => UserView(),
       binding: BindingsBuilder(() {
         Get.put(UserController(), permanent: true);
+      }),
+    ),
+    GetPage(
+      name: Routes.FORMATIONS,
+      page: () => const CoursesView(),
+      binding: BindingsBuilder(() {
+        Get.put(HomeController(), permanent: true);
+        Get.put(CourseController(), permanent: true);
       }),
     ),
   ];

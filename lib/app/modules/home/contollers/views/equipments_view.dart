@@ -410,6 +410,8 @@ class EquipmentsView extends StatelessWidget {
         TextEditingController(text: equipment?.serialNumber ?? '');
     final priceController =
         TextEditingController(text: equipment?.purchasePrice.toString() ?? '');
+    final dayPriceController =
+        TextEditingController(text: equipment?.pricePerDay.toString() ?? '');
     final dateController =
         TextEditingController(text: equipment?.purchaseDate ?? '');
     final warrantyController =
@@ -528,11 +530,21 @@ class EquipmentsView extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                _buildDialogField("Expiration de la garantie", "jj/mm/aaaa",
-                    warrantyController,
-                    icon: Icons.calendar_today_outlined,
-                    readOnly: true,
-                    onTap: () => pickDate(warrantyController)),
+                Row(
+                  children: [
+                    Expanded(
+                        child: _buildDialogField(
+                            "Prix par jour", "0", dayPriceController,
+                            isNumber: true)),
+                    const SizedBox(width: 24),
+                    Expanded(
+                        child: _buildDialogField("Expiration de la garantie",
+                            "jj/mm/aaaa", warrantyController,
+                            icon: Icons.calendar_today_outlined,
+                            readOnly: true,
+                            onTap: () => pickDate(warrantyController))),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 SizedBox(
                     width: 200,
@@ -585,6 +597,8 @@ class EquipmentsView extends StatelessWidget {
                           purchaseDate: dateController.text,
                           purchasePrice:
                               double.tryParse(priceController.text) ?? 0,
+                          pricePerDay:
+                              double.tryParse(dayPriceController.text) ?? 0,
                           warrantyExpiration: warrantyController.text,
                           spaceIds: selectedSpaceIds,
                           spaceLabel: selectedSpaceLabel,

@@ -57,12 +57,17 @@ class SpacesView extends GetView<SpaceController> {
             children: const [
               Text(
                 'Gestion des espaces',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontSize: 38,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                  height: 1.05,
+                ),
               ),
               SizedBox(height: 4),
               Text(
                 'Gerez vos espaces de coworking',
-                style: TextStyle(color: Colors.black54),
+                style: TextStyle(color: Color(0xFF475569), fontSize: 21),
               ),
             ],
           ),
@@ -76,7 +81,12 @@ class SpacesView extends GetView<SpaceController> {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF1664FF),
+            foregroundColor: Colors.white,
+            elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           icon: const Icon(Icons.add, size: 18),
           label: const Text('Nouvel espace'),
@@ -93,11 +103,24 @@ class SpacesView extends GetView<SpaceController> {
             onChanged: (value) => _searchQuery.value = value,
             decoration: InputDecoration(
               hintText: 'Rechercher un espace...',
-              prefixIcon: const Icon(Icons.search),
+              hintStyle:
+                  const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+              prefixIcon:
+                  const Icon(Icons.search, color: Color(0xFF64748B), size: 18),
               filled: true,
               fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+              ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
             ),
@@ -112,11 +135,22 @@ class SpacesView extends GetView<SpaceController> {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                 ),
               ),
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
               items: const [
                 'Tous les statuts',
                 'Disponible',
@@ -132,21 +166,16 @@ class SpacesView extends GetView<SpaceController> {
             ),
           ),
         ),
-        const SizedBox(width: 12),
-        IconButton(
-          onPressed: controller.loadSpaces,
-          icon: const Icon(Icons.refresh),
-        ),
       ],
     );
   }
 
   Widget _buildFiltersCard() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: _buildFilters(),
@@ -157,7 +186,7 @@ class SpacesView extends GetView<SpaceController> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Obx(() {
@@ -203,7 +232,7 @@ class SpacesView extends GetView<SpaceController> {
 
   Widget _buildTableHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
       ),
@@ -268,7 +297,7 @@ class SpacesView extends GetView<SpaceController> {
         : space.currency;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       child: Row(
         children: [
           Expanded(
@@ -350,6 +379,37 @@ class SpacesView extends GetView<SpaceController> {
                           await Get.to(() => CreateSpaceView(space: space));
                       if (result == true) {
                         await controller.loadSpaces();
+                        Get.snackbar(
+                          '',
+                          'Espace mis à jour avec succès',
+                          titleText: const SizedBox.shrink(),
+                          messageText: const Row(
+                            children: [
+                              Icon(Icons.check_circle,
+                                  size: 16, color: Color(0xFF16A34A)),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Espace mis à jour avec succès',
+                                  style: TextStyle(
+                                    color: Color(0xFF166534),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          snackPosition: SnackPosition.TOP,
+                          margin: const EdgeInsets.only(
+                              top: 10, left: 350, right: 350),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
+                          borderRadius: 8,
+                          backgroundColor: const Color(0xFFEAF9EF),
+                          borderColor: const Color(0xFFB7E4C7),
+                          borderWidth: 1,
+                          duration: const Duration(seconds: 2),
+                        );
                       }
                     },
                   ),

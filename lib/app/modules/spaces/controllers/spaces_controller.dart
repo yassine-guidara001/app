@@ -91,12 +91,6 @@ class SpaceController extends GetxController {
         spaces.refresh();
       }
 
-      Get.snackbar(
-        "Succès",
-        "Espace modifié avec succès",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-
       return true;
     } catch (e) {
       Get.snackbar(

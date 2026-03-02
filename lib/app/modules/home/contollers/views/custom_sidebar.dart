@@ -91,7 +91,7 @@ class CustomSidebar extends StatelessWidget {
                           letterSpacing: 1.1)),
                   const SizedBox(height: 12),
                   _menuItem(controller, 5, Icons.menu_book_outlined,
-                      "Formations", Routes.HOME),
+                      "Formations", Routes.FORMATIONS),
                   _menuItem(controller, 6, Icons.layers_outlined, "Sessions",
                       Routes.HOME),
                   _menuItem(controller, 7, Icons.school_outlined, "Étudiants",

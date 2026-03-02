@@ -20,7 +20,7 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
   static const _cardBorder = Color(0xFFE2E8F0);
   static const _muted = Color(0xFF64748B);
   static const _primary = Color(0xFF1664FF);
-  static const _fieldBg = Color(0xFFF8FAFC);
+  static const _fieldBg = Colors.white;
 
   late final TextEditingController _name;
   late final TextEditingController _location;
@@ -141,7 +141,7 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: _cardBorder),
           ),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(14),
           child: _form(isEdit),
         ),
       ],
@@ -152,45 +152,34 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        IconButton(
+          onPressed: () => Get.back(result: false),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF475569)),
+          splashRadius: 18,
+        ),
+        const SizedBox(width: 6),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 isEdit ? "Modifier l'espace" : "Créer un espace",
-                style:
-                    const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                  height: 1.05,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 isEdit
-                    ? "Modifiez les informations de l'espace."
-                    : "Ajoutez un nouvel espace à votre espace de coworking.",
-                style: const TextStyle(color: _muted),
+                    ? "Modifiez les informations de l'espace de coworking"
+                    : "Ajoutez un nouvel espace à votre espace de coworking",
+                style: const TextStyle(color: _muted, fontSize: 21),
               ),
             ],
           ),
-        ),
-        TextButton(
-          onPressed: () => Get.back(result: false),
-          style: TextButton.styleFrom(
-            foregroundColor: _muted,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          ),
-          child: const Text("Annuler"),
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          onPressed: () => _submit(isEdit),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            elevation: 0,
-          ),
-          child: Text(isEdit ? "Enregistrer" : "Créer"),
         ),
       ],
     );
@@ -346,6 +335,32 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
                   "Description",
                   _description,
                   maxLines: 4,
+                  hintText: "Description détaillée de l'espace...",
+                ),
+              ),
+              SizedBox(
+                width: isWide ? constraints.maxWidth : fieldWidth,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: ElevatedButton(
+                      onPressed: () => _submit(isEdit),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(isEdit ? 'Mettre à jour' : 'Créer'),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -356,7 +371,10 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
   }
 
   Widget _field(String label, TextEditingController c,
-      {TextInputType? keyboard, bool requiredField = false, int maxLines = 1}) {
+      {TextInputType? keyboard,
+      bool requiredField = false,
+      int maxLines = 1,
+      String? hintText}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -380,6 +398,7 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
             return null;
           },
           decoration: InputDecoration(
+            hintText: hintText,
             hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
             filled: true,
             fillColor: _fieldBg,
@@ -507,9 +526,12 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
     final controller = Get.find<SpaceController>();
 
     if (isEdit) {
-      await controller.updateSpace(widget.space!.documentId, payload);
+      final ok =
+          await controller.updateSpace(widget.space!.documentId, payload);
+      if (!ok) return;
     } else {
-      await controller.create(payload);
+      final created = await controller.create(payload);
+      if (created == null) return;
     }
 
     Get.back(result: true);
