@@ -100,11 +100,22 @@ class LoginPage extends StatelessWidget {
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 40),
+                                const Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    "Adresse email",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 TextField(
                                   controller: emailCtrl,
                                   decoration: InputDecoration(
-                                    labelText: "Email ou nom d'utilisateur",
-                                    hintText: "vous@example.com ou yassine",
+                                    hintText: "vous@example.com",
                                     prefixIcon:
                                         const Icon(Icons.email_outlined),
                                     border: OutlineInputBorder(
@@ -125,12 +136,43 @@ class LoginPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      "Mot de passe",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {},
+                                      style: TextButton.styleFrom(
+                                        minimumSize: Size.zero,
+                                        padding: EdgeInsets.zero,
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                      child: const Text(
+                                        "Mot de passe oublié?",
+                                        style: TextStyle(
+                                          color: Color(0xFF2563EB),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
                                 TextField(
                                   controller: passwordCtrl,
                                   obscureText: true,
                                   decoration: InputDecoration(
-                                    labelText: "Mot de passe",
-                                    hintText: "••••••••",
+                                    hintText: "••••••",
                                     prefixIcon: const Icon(Icons.lock_outlined),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -145,21 +187,6 @@ class LoginPage extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(8),
                                       borderSide: const BorderSide(
                                         color: Color(0xFFE0E0E0),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: () {},
-                                    child: const Text(
-                                      "Mot de passe oublié ?",
-                                      style: TextStyle(
-                                        color: Color(0xFF2563EB),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ),

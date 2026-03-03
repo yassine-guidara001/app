@@ -4,9 +4,17 @@ import 'package:get/get.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
 
 class AuthController extends GetxController {
+  static AuthController get to => Get.find<AuthController>();
+
   final isLoading = false.obs;
   final HttpService httpService = Get.find<HttpService>();
   final StorageService storageService = Get.find<StorageService>();
+
+  String get token =>
+      storageService.getToken() ??
+      storageService.read<String>('token') ??
+      storageService.read<String>('jwt') ??
+      '';
 
   /// Extraire le token de la réponse (essaie différentes clés)
   String? _extractToken(Map<String, dynamic> body) {

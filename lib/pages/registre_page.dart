@@ -198,10 +198,21 @@ class RegisterPage extends StatelessWidget {
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 40),
+                                const Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    "Nom d'utilisateur",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 TextField(
                                   controller: controller.usernameController,
                                   decoration: InputDecoration(
-                                    labelText: "Nom d'utilisateur",
                                     hintText: "Jean Dupont",
                                     prefixIcon:
                                         const Icon(Icons.person_outlined),
@@ -223,12 +234,23 @@ class RegisterPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
+                                const Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    "Adresse email",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 TextField(
                                   controller: controller.emailController,
                                   keyboardType: TextInputType.emailAddress,
                                   decoration: InputDecoration(
-                                    labelText: "Adresse email",
-                                    hintText: "vous@example.com",
+                                    hintText: "vous@exemple.com",
                                     prefixIcon:
                                         const Icon(Icons.email_outlined),
                                     border: OutlineInputBorder(
@@ -249,12 +271,23 @@ class RegisterPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
+                                const Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    "Mot de passe",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 TextField(
                                   controller: controller.passwordController,
                                   obscureText: true,
                                   decoration: InputDecoration(
-                                    labelText: "Mot de passe",
-                                    hintText: "••••••••",
+                                    hintText: "•••••••",
                                     helperText: "Minimum 8 caractères",
                                     prefixIcon: const Icon(Icons.lock_outlined),
                                     border: OutlineInputBorder(
@@ -275,13 +308,24 @@ class RegisterPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
+                                const Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    "Confirmer le mot de passe",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
                                 TextField(
                                   controller:
                                       controller.confirmPasswordController,
                                   obscureText: true,
                                   decoration: InputDecoration(
-                                    labelText: "Confirmer le mot de passe",
-                                    hintText: "••••••••",
+                                    hintText: "•••••••",
                                     prefixIcon: const Icon(Icons.lock_outlined),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),

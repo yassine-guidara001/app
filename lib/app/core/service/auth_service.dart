@@ -1,70 +1,120 @@
 import 'dart:convert';
+
+import 'package:flutter_getx_app/app/core/service/storage_service.dart';
+import 'package:flutter_getx_app/app/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_getx_app/app/routes/app_routes.dart';
 
-class AuthController extends GetxController {
-  final isLoading = false.obs;
-  final storage = const FlutterSecureStorage();
+class AuthService extends GetxService {
+  static const String _baseApiUrl = 'http://193.111.250.244:3046/api';
 
-  final String baseUrl = "http://193.111.250.244:3046";
+  final StorageService _storage = Get.find<StorageService>();
 
-  Future<void> loginUser(String email, String password) async {
-    if (email.isEmpty || password.isEmpty) {
-      Get.snackbar("Erreur", "Veuillez remplir tous les champs");
-      return;
+  String? get token {
+    final raw = _storage.getToken() ??
+        _storage.read<String>('jwt') ??
+        _storage.read<String>('token');
+
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+
+    if (trimmed.toLowerCase().startsWith('bearer ')) {
+      return trimmed.substring(7).trim();
     }
+    return trimmed;
+  }
 
-    isLoading.value = true;
+  bool get isLoggedIn => (token ?? '').isNotEmpty;
 
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/api/auth/local"),
-        headers: const {
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode({
-          "identifier": email,
-          "password": password,
-        }),
-      );
+  Map<String, String> get authHeaders {
+    final currentToken = token;
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (currentToken != null && currentToken.isNotEmpty)
+        'Authorization': 'Bearer $currentToken',
+    };
+  }
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+  Future<String> login({
+    required String identifier,
+    required String password,
+  }) async {
+    final payload = {
+      'identifier': identifier.trim(),
+      'password': password,
+    };
 
-        final String jwt = data['jwt'];
+    print('📡 POST /auth/local');
 
-        await storage.write(key: 'jwt', value: jwt);
+    final response = await http.post(
+      Uri.parse('$_baseApiUrl/auth/local'),
+      headers: const {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode(payload),
+    );
 
-        Get.snackbar("Succès", "Connecté avec succès");
-        Get.offAllNamed(Routes.HOME);
-      } else {
-        final error = jsonDecode(response.body);
-        Get.snackbar(
-          "Erreur",
-          error['error']?['message'] ?? "Login échoué",
-        );
+    print('✅ Réponse /auth/local: ${response.statusCode}');
+
+    final decoded = _decodeBody(response.body);
+    if (response.statusCode == 200) {
+      final jwt = (decoded['jwt'] ?? '').toString().trim();
+      if (jwt.isEmpty) {
+        throw Exception('JWT manquant dans la réponse de connexion');
       }
-    } catch (e) {
-      Get.snackbar(
-        "Erreur",
-        "Impossible de se connecter au serveur",
-      );
-    } finally {
-      isLoading.value = false;
+
+      await _storage.saveToken(jwt);
+      await _storage.write('jwt', jwt);
+      await _storage.write('token', jwt);
+
+      final user = decoded['user'];
+      if (user is Map<String, dynamic>) {
+        await _storage.saveUserData(user);
+      }
+
+      return jwt;
     }
+
+    throw Exception(_statusMessage(response.statusCode, decoded));
   }
 
   Future<void> logout() async {
-    await storage.http.delete(key: 'jwt');
-    Get.offAllNamed(Routes.LOGIN);
+    await _storage.logout();
+    if (Get.currentRoute != Routes.LOGIN) {
+      Get.offAllNamed(Routes.LOGIN);
+    }
   }
-}
 
-class FlutterSecureStorage {
-  const FlutterSecureStorage();
-  
-  get http => null;
-  
-  Future<void> write({required String key, required String value}) async {}
+  void handleUnauthorized() {
+    print('❌ 401 Unauthorized → redirection /login');
+    logout();
+  }
+
+  Map<String, dynamic> _decodeBody(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return <String, dynamic>{};
+    } catch (_) {
+      return <String, dynamic>{};
+    }
+  }
+
+  String _statusMessage(int statusCode, Map<String, dynamic> body) {
+    final strapiMsg = body['error']?['message']?.toString() ??
+        body['message']?.toString() ??
+        'Erreur inconnue';
+
+    if (statusCode == 401) return 'Identifiants invalides';
+    if (statusCode == 403) return 'Accès interdit';
+    if (statusCode == 404) return 'Ressource introuvable';
+    if (statusCode == 422) return strapiMsg;
+    if (statusCode >= 500) return 'Erreur serveur';
+    return strapiMsg;
+  }
 }

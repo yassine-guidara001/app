@@ -14,6 +14,9 @@ abstract class Routes {
   static const USERS = '/users';
   static const RESERVATIONS = '/reservations';
   static const FORMATIONS = '/formations';
+  static const SESSIONS = '/sessions';
+  static const DEVOIRS = '/devoirs';
+  static const COMMUNICATION = '/communication';
   static const CREATE_SPACE = '/create-space';
 
   /// AUTRES

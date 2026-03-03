@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 // Services
 import 'package:flutter_getx_app/app/core/service/http_service.dart';
 import 'package:flutter_getx_app/app/core/service/storage_service.dart';
+import 'package:flutter_getx_app/app/core/service/auth_service.dart';
 
 // Routes
 import 'package:flutter_getx_app/app/routes/app_pages.dart';
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter GetX App',
+      title: 'SUNSPACE - Coworking & Learning Management',
       debugShowCheckedModeBanner: false,
       initialRoute: Routes.LOGIN,
       getPages: AppPages.routes,
@@ -47,6 +48,9 @@ Future<void> initServices() async {
 
   // 2️⃣ HTTP
   Get.put<HttpService>(HttpService(), permanent: true);
+
+  // 2️⃣bis Auth
+  Get.put<AuthService>(AuthService(), permanent: true);
 
   // 3️⃣ Controllers (après services)
   Get.put<HomeController>(HomeController(), permanent: true);
