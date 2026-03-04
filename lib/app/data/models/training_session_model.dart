@@ -167,6 +167,11 @@ class TrainingSession {
     final courseTitle =
         (courseData?['title'] ?? data['courseTitle'] ?? '').toString();
 
+    final parsedParticipants = participantsData
+        .map(_participantFromAny)
+        .whereType<Participant>()
+        .toList();
+
     return TrainingSession(
       id: _toInt(data['id']),
       documentId: (data['documentId'] ?? data['document_id'] ?? '').toString(),
@@ -183,10 +188,7 @@ class TrainingSession {
           _toNullableString(data['meeting_url'] ?? data['meetingLink']),
       notes: _toNullableString(data['notes']),
       status: SessionStatusX.fromAny(data['mystatus'] ?? data['status']),
-      participants: participantsData
-          .whereType<Map<String, dynamic>>()
-          .map(Participant.fromJson)
-          .toList(),
+      participants: parsedParticipants,
       createdAt: _toDateTime(data['createdAt']),
     );
   }
@@ -309,4 +311,21 @@ String? _toNullableString(dynamic value) {
   final text = value.toString().trim();
   if (text.isEmpty) return null;
   return text;
+}
+
+Participant? _participantFromAny(dynamic value) {
+  if (value is Map<String, dynamic>) {
+    return Participant.fromJson(value);
+  }
+
+  final id = _toIntNullable(value);
+  if (id == null) return null;
+
+  return Participant(
+    id: id,
+    documentId: '',
+    firstname: '',
+    lastname: '',
+    email: '',
+  );
 }

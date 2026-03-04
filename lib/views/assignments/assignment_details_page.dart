@@ -6,6 +6,7 @@ import 'package:flutter_getx_app/controllers/assignments_controller.dart';
 import 'package:flutter_getx_app/models/assignment_model.dart';
 import 'package:flutter_getx_app/views/assignments/assignment_form_page.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AssignmentDetailsPage extends GetView<AssignmentsController> {
   final Assignment assignment;
@@ -43,6 +44,10 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
                               _buildSummaryRow(),
                               const SizedBox(height: 18),
                               _buildInstructionsCard(),
+                              if (_hasAttachment) ...[
+                                const SizedBox(height: 14),
+                                _buildAttachmentCard(),
+                              ],
                               const SizedBox(height: 14),
                               _buildSubmissionsCard(),
                             ],
@@ -78,7 +83,6 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
               Text(
                 assignment.title,
                 style: const TextStyle(
-                  fontSize: 40,
                   fontWeight: FontWeight.w700,
                   height: 1,
                   color: Color(0xFF111827),
@@ -88,7 +92,6 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
               const Text(
                 'Détails du devoir',
                 style: TextStyle(
-                  fontSize: 20,
                   color: Color(0xFF64748B),
                 ),
               ),
@@ -183,7 +186,6 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
               Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 12,
                   color: Color(0xFF6B7280),
                 ),
               ),
@@ -195,7 +197,6 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 36,
               fontWeight: FontWeight.w700,
               height: 1,
               color: Color(0xFF111827),
@@ -205,7 +206,6 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
           Text(
             footer,
             style: const TextStyle(
-              fontSize: 18,
               color: Color(0xFF94A3B8),
             ),
           ),
@@ -238,7 +238,6 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
             child: const Text(
               'Instructions',
               style: TextStyle(
-                fontSize: 26,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF111827),
               ),
@@ -251,7 +250,6 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
                   ? 'Aucune instruction fournie'
                   : assignment.instructions,
               style: const TextStyle(
-                fontSize: 22,
                 color: Color(0xFF111827),
               ),
             ),
@@ -277,7 +275,6 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
           const Text(
             'Soumissions',
             style: TextStyle(
-              fontSize: 30,
               fontWeight: FontWeight.w700,
               color: Color(0xFF111827),
             ),
@@ -287,13 +284,107 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
             child: Text(
               'La gestion des soumissions sera disponible prochainement',
               style: TextStyle(
-                fontSize: 20,
                 color: Colors.blueGrey.shade300,
               ),
               textAlign: TextAlign.center,
             ),
           ),
           const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttachmentCard() {
+    final fileName = assignment.attachmentName ??
+        _extractFileNameFromUrl(assignment.attachmentUrl) ??
+        'Document joint';
+
+    final sizeText = assignment.attachmentSizeKb != null
+        ? '${assignment.attachmentSizeKb!.toStringAsFixed(2)} KB'
+        : 'Fichier joint';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF2FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF93C5FD)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.description_outlined, color: _primary, size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Pièce jointe',
+                style: TextStyle(
+                  color: Color(0xFF111827),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _border),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.insert_drive_file_outlined,
+                    color: _primary, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF111827),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        sizeText,
+                        style: const TextStyle(
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 30,
+                  child: ElevatedButton(
+                    onPressed: _downloadAttachment,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Télécharger'),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -334,5 +425,46 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
     final hh = value.hour.toString().padLeft(2, '0');
     final mm = value.minute.toString().padLeft(2, '0');
     return '$hh:$mm';
+  }
+
+  bool get _hasAttachment {
+    final url = assignment.attachmentUrl?.trim() ?? '';
+    return url.isNotEmpty;
+  }
+
+  String? _extractFileNameFromUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return null;
+    final uri = Uri.tryParse(url.trim());
+    final segments = uri?.pathSegments;
+    if (segments == null || segments.isEmpty) return null;
+    return Uri.decodeComponent(segments.last);
+  }
+
+  String? _resolveAttachmentUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+    final normalized = rawUrl.trim();
+    if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
+      return normalized;
+    }
+    return 'http://193.111.250.244:3046$normalized';
+  }
+
+  Future<void> _downloadAttachment() async {
+    final resolved = _resolveAttachmentUrl(assignment.attachmentUrl);
+    if (resolved == null) {
+      Get.snackbar('Erreur', 'Aucun document à télécharger');
+      return;
+    }
+
+    final uri = Uri.tryParse(resolved);
+    if (uri == null) {
+      Get.snackbar('Erreur', 'Lien de téléchargement invalide');
+      return;
+    }
+
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched) {
+      Get.snackbar('Erreur', 'Impossible d’ouvrir le document');
+    }
   }
 }

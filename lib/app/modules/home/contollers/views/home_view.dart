@@ -52,7 +52,7 @@ class HomeView extends GetView<HomeController> {
               style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
-                  fontSize: 18)),
+                  )),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.grey, size: 20),
@@ -72,7 +72,7 @@ class HomeView extends GetView<HomeController> {
               style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
-                  fontSize: 14)),
+                  )),
           const Icon(Icons.keyboard_arrow_down, color: Colors.black, size: 18),
         ],
       ),
@@ -92,14 +92,13 @@ class HomeView extends GetView<HomeController> {
                 SizedBox(width: 12),
                 Text("Gestion des utilisateurs",
                     style: TextStyle(
-                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1E293B))),
               ],
             ),
             SizedBox(height: 4),
             Text("Gérez les utilisateurs et leurs permissions",
-                style: TextStyle(color: Colors.grey, fontSize: 14)),
+                style: TextStyle(color: Colors.grey, )),
           ],
         ),
         ElevatedButton.icon(
@@ -219,8 +218,7 @@ class HomeView extends GetView<HomeController> {
         style: const TextStyle(
           fontWeight: FontWeight.bold,
           color: Color(0xFF64748B),
-          fontSize: 14,
-        ),
+          ),
       ),
     );
   }
@@ -238,13 +236,13 @@ class HomeView extends GetView<HomeController> {
               children: [
                 Text(user.name,
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15)),
+                        fontWeight: FontWeight.bold, )),
                 const SizedBox(height: 2),
                 Row(
                   children: [
                     Text("ID: ${user.id}",
                         style:
-                            const TextStyle(color: Colors.grey, fontSize: 12)),
+                            const TextStyle(color: Colors.grey, )),
                     const SizedBox(width: 4),
                     const Icon(Icons.copy, size: 12, color: Colors.grey),
                   ],
@@ -335,7 +333,6 @@ class HomeView extends GetView<HomeController> {
         status,
         style: const TextStyle(
           color: Color(0xFF166534),
-          fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -368,10 +365,10 @@ class HomeView extends GetView<HomeController> {
                     children: [
                       Text("Nouvel utilisateur",
                           style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
+                              fontWeight: FontWeight.bold)),
                       SizedBox(height: 4),
                       Text("Ajoutez un nouvel utilisateur au système.",
-                          style: TextStyle(color: Colors.grey, fontSize: 13)),
+                          style: TextStyle(color: Colors.grey, )),
                     ],
                   ),
                   IconButton(
@@ -384,13 +381,13 @@ class HomeView extends GetView<HomeController> {
 
               /// Nom d'utilisateur
               const Text("Nom d'utilisateur",
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w500, )),
               const SizedBox(height: 8),
               TextField(
                 controller: name,
                 decoration: InputDecoration(
                   hintText: "johndoe",
-                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                  hintStyle: const TextStyle(color: Colors.grey, ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
                   contentPadding:
@@ -407,13 +404,13 @@ class HomeView extends GetView<HomeController> {
 
               /// Email
               const Text("Email",
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w500, )),
               const SizedBox(height: 8),
               TextField(
                 controller: email,
                 decoration: InputDecoration(
                   hintText: "john@example.com",
-                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                  hintStyle: const TextStyle(color: Colors.grey, ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
                   contentPadding:
@@ -430,7 +427,7 @@ class HomeView extends GetView<HomeController> {
 
               /// Rôle
               const Text("Rôle",
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w500, )),
               const SizedBox(height: 8),
               Obx(() => Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -446,7 +443,7 @@ class HomeView extends GetView<HomeController> {
                             : rxRole.value,
                         hint: Text(rxRole.value,
                             style: const TextStyle(
-                                color: Colors.grey, fontSize: 14)),
+                                color: Colors.grey, )),
                         isExpanded: true,
                         items: ["Admin", "Authenticated", "Staff"]
                             .map((String value) {
@@ -463,14 +460,14 @@ class HomeView extends GetView<HomeController> {
 
               /// Mot de passe
               const Text("Mot de passe",
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w500, )),
               const SizedBox(height: 8),
               TextField(
                 controller: password,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: "******",
-                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                  hintStyle: const TextStyle(color: Colors.grey, ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
                   contentPadding:
@@ -493,14 +490,14 @@ class HomeView extends GetView<HomeController> {
                         onChanged: (val) => rxConfirmed.value = val,
                         activeColor: Colors.blue,
                       )),
-                  const Text("Confirmé", style: TextStyle(fontSize: 14)),
+                  const Text("Confirmé", style: TextStyle()),
                   const SizedBox(width: 24),
                   Obx(() => Switch(
                         value: rxBlocked.value,
                         onChanged: (val) => rxBlocked.value = val,
                         activeColor: Colors.blue,
                       )),
-                  const Text("Bloqué", style: TextStyle(fontSize: 14)),
+                  const Text("Bloqué", style: TextStyle()),
                 ],
               ),
               const SizedBox(height: 24),

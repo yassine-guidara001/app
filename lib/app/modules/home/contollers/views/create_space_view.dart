@@ -96,7 +96,7 @@ class CreateSpaceView extends StatelessWidget {
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: "Rechercher...",
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                      hintStyle: TextStyle(color: Colors.grey, ),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -119,7 +119,7 @@ class CreateSpaceView extends StatelessWidget {
               style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
-                  fontSize: 14)),
+                  )),
           const Icon(Icons.keyboard_arrow_down, color: Colors.black, size: 18),
         ],
       ),
@@ -140,7 +140,6 @@ class CreateSpaceView extends StatelessWidget {
             Text(
               isEditing ? "Modifier l'espace" : "Créer un nouvel espace",
               style: const TextStyle(
-                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1E293B)),
             ),
@@ -148,7 +147,7 @@ class CreateSpaceView extends StatelessWidget {
               isEditing
                   ? "Modifiez les informations de l'espace sélectionné"
                   : "Ajoutez un nouvel espace de coworking à votre inventaire",
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
+              style: const TextStyle(color: Colors.grey, ),
             ),
           ],
         ),
@@ -276,7 +275,7 @@ class CreateSpaceView extends StatelessWidget {
             ),
             child: Text(isEditing ? "Enregistrer" : "Créer l'espace",
                 style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const TextStyle(fontWeight: FontWeight.bold, )),
           ),
         ],
       ),
@@ -292,17 +291,16 @@ class CreateSpaceView extends StatelessWidget {
         Text(label,
             style: const TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 13,
                 color: Color(0xFF1E293B))),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           maxLines: maxLines,
-          style: const TextStyle(fontSize: 14),
+          style: const TextStyle(),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+            hintStyle: const TextStyle(color: Colors.grey, ),
             filled: true,
             fillColor: Colors.white,
             contentPadding:
@@ -326,7 +324,6 @@ class CreateSpaceView extends StatelessWidget {
         Text(label,
             style: const TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 13,
                 color: Color(0xFF1E293B))),
         const SizedBox(height: 8),
         Obx(() => Container(
@@ -344,7 +341,7 @@ class CreateSpaceView extends StatelessWidget {
                   items: items.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
-                      child: Text(value, style: const TextStyle(fontSize: 14)),
+                      child: Text(value, style: const TextStyle()),
                     );
                   }).toList(),
                   onChanged: (val) => rxValue.value = val!,

@@ -60,6 +60,21 @@ class TrainingSessionsApi {
     await _delete('/training-sessions/$id');
   }
 
+  Future<TrainingSession> updateSessionAttendees(
+    dynamic id, {
+    required List<int> attendeeIds,
+  }) async {
+    final response = await _put(
+      '/training-sessions/$id',
+      {
+        'data': {
+          'attendees': attendeeIds,
+        }
+      },
+    );
+    return TrainingSession.fromJson(_decodeMap(response.body));
+  }
+
   Future<http.Response> _get(String endpoint) async {
     final uri = Uri.parse('$_baseApiUrl$endpoint');
     print('📡 GET $uri');

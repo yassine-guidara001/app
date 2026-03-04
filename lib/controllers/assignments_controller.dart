@@ -46,7 +46,8 @@ class AssignmentsController extends GetxController {
 
     try {
       final created = await _api.createAssignment(data);
-      assignments.insert(0, _resolveCourseName(created));
+      final hydrated = _hydrateCourseFromPayload(created, data);
+      assignments.insert(0, _resolveCourseName(hydrated));
       Get.snackbar('Succès', 'Devoir créé avec succès');
       return true;
     } catch (e) {
@@ -69,7 +70,8 @@ class AssignmentsController extends GetxController {
         data,
         documentId: documentId,
       );
-      final resolved = _resolveCourseName(updated);
+      final hydrated = _hydrateCourseFromPayload(updated, data);
+      final resolved = _resolveCourseName(hydrated);
 
       final index = assignments.indexWhere((item) => item.id == resolved.id);
       if (index >= 0) {
@@ -119,7 +121,25 @@ class AssignmentsController extends GetxController {
     }
   }
 
-  Future<String?> uploadAttachment(dynamic file) async {
+  Future<Assignment?> fetchAssignmentById(
+    int id, {
+    String? documentId,
+  }) async {
+    try {
+      final assignment = await _api.getAssignmentById(
+        id,
+        documentId: documentId,
+      );
+      return _resolveCourseName(assignment);
+    } catch (e) {
+      final message = _normalizeError(e);
+      errorMessage.value = message;
+      Get.snackbar('Erreur', message);
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> uploadAttachment(dynamic file) async {
     try {
       return await _api.uploadAttachment(file);
     } catch (e) {
@@ -136,14 +156,73 @@ class AssignmentsController extends GetxController {
       return assignment;
     }
 
-    final found =
-        courses.firstWhereOrNull((course) => course.id == assignment.courseId);
+    Course? found;
+
+    if (assignment.courseId != null) {
+      found = courses
+          .firstWhereOrNull((course) => course.id == assignment.courseId);
+    }
+
+    if (found == null) {
+      final courseDocumentId = assignment.courseDocumentId?.trim() ?? '';
+      if (courseDocumentId.isNotEmpty) {
+        found = courses.firstWhereOrNull(
+          (course) => course.documentId.trim() == courseDocumentId,
+        );
+      }
+    }
 
     if (found == null) {
       return assignment;
     }
 
-    return assignment.copyWith(courseName: found.title);
+    return assignment.copyWith(
+      courseName: found.title,
+      courseId: assignment.courseId ?? found.id,
+      courseDocumentId: assignment.courseDocumentId ?? found.documentId,
+    );
+  }
+
+  Assignment _hydrateCourseFromPayload(Assignment assignment, Map data) {
+    if (assignment.courseName.trim().isNotEmpty &&
+        assignment.courseName != 'Non spécifié') {
+      return assignment;
+    }
+
+    Course? found;
+    final payloadCourseId =
+        _toIntNullable(data['courseId'] ?? data['course_id']);
+    final payloadCourseDocumentId = (data['course'] is String)
+        ? data['course'].toString().trim()
+        : (data['courseDocumentId']?.toString().trim() ?? '');
+
+    if (payloadCourseId != null) {
+      found =
+          courses.firstWhereOrNull((course) => course.id == payloadCourseId);
+    }
+
+    if (found == null && payloadCourseDocumentId.isNotEmpty) {
+      found = courses.firstWhereOrNull(
+        (course) => course.documentId.trim() == payloadCourseDocumentId,
+      );
+    }
+
+    if (found == null) {
+      return assignment;
+    }
+
+    return assignment.copyWith(
+      courseName: found.title,
+      courseId: assignment.courseId ?? found.id,
+      courseDocumentId: assignment.courseDocumentId ?? found.documentId,
+    );
+  }
+
+  int? _toIntNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
   }
 
   String _normalizeError(Object error) {

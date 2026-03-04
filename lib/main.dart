@@ -28,11 +28,25 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
+  static const TextTheme _appTextTheme = TextTheme(
+    displayLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+    titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+    titleMedium: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+    bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+    bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+    bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+    labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+  );
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'SUNSPACE - Coworking & Learning Management',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        textTheme: _appTextTheme,
+      ),
       initialRoute: Routes.LOGIN,
       getPages: AppPages.routes,
     );

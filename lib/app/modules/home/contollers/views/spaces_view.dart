@@ -68,7 +68,7 @@ class SpacesView extends StatelessWidget {
                     onChanged: controller.searchSpaces,
                     decoration: const InputDecoration(
                       hintText: "Rechercher...",
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                      hintStyle: TextStyle(color: Colors.grey, ),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -91,7 +91,7 @@ class SpacesView extends StatelessWidget {
               style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
-                  fontSize: 14)),
+                  )),
           const Icon(Icons.keyboard_arrow_down, color: Colors.black, size: 18),
         ],
       ),
@@ -118,14 +118,13 @@ class SpacesView extends StatelessWidget {
                 const SizedBox(width: 12),
                 const Text("Gestion des espaces",
                     style: TextStyle(
-                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1E293B))),
               ],
             ),
             const SizedBox(height: 4),
             const Text("Gérez vos espaces de coworking",
-                style: TextStyle(color: Colors.grey, fontSize: 13)),
+                style: TextStyle(color: Colors.grey, )),
           ],
         ),
         ElevatedButton.icon(
@@ -165,7 +164,7 @@ class SpacesView extends StatelessWidget {
                     onChanged: controller.searchSpaces,
                     decoration: const InputDecoration(
                         hintText: "Rechercher un espace...",
-                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
+                        hintStyle: TextStyle(color: Colors.grey, ),
                         border: InputBorder.none),
                   ),
                 ),
@@ -184,7 +183,7 @@ class SpacesView extends StatelessWidget {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: "Tous les statuts",
-              style: const TextStyle(color: Colors.black, fontSize: 14),
+              style: const TextStyle(color: Colors.black, ),
               items: [
                 "Tous les statuts",
                 "Disponible",
@@ -259,7 +258,7 @@ class SpacesView extends StatelessWidget {
         label,
         textAlign: align,
         style: const TextStyle(
-            fontWeight: FontWeight.bold, color: Colors.black, fontSize: 13),
+            fontWeight: FontWeight.bold, color: Colors.black, ),
       ),
     );
   }
@@ -273,12 +272,12 @@ class SpacesView extends StatelessWidget {
               flex: 3,
               child: Text(space.name,
                   style: const TextStyle(
-                      fontWeight: FontWeight.w500, fontSize: 14))),
+                      fontWeight: FontWeight.w500, ))),
           Expanded(
               flex: 2,
               child: Text(space.type,
                   style:
-                      const TextStyle(color: Color(0xFF64748B), fontSize: 13))),
+                      const TextStyle(color: Color(0xFF64748B), ))),
           Expanded(
               flex: 3,
               child: Row(
@@ -290,7 +289,7 @@ class SpacesView extends StatelessWidget {
                     child: Text(space.location,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            color: Color(0xFF64748B), fontSize: 13)),
+                            color: Color(0xFF64748B), )),
                   ),
                 ],
               )),
@@ -305,7 +304,7 @@ class SpacesView extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text("${space.capacity}",
                         style: const TextStyle(
-                            color: Color(0xFF64748B), fontSize: 13)),
+                            color: Color(0xFF64748B), )),
                   ],
                 ),
               )),
@@ -316,7 +315,7 @@ class SpacesView extends StatelessWidget {
                     style: const TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.bold,
-                        fontSize: 14)),
+                        )),
               )),
           Expanded(
               flex: 2,
@@ -332,7 +331,6 @@ class SpacesView extends StatelessWidget {
                     "${space.reservations}",
                     style: const TextStyle(
                       color: Colors.blue,
-                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -399,7 +397,7 @@ class SpacesView extends StatelessWidget {
             color: bgColor, borderRadius: BorderRadius.circular(6)),
         child: Text(status,
             style: TextStyle(
-                color: textColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                color: textColor, fontWeight: FontWeight.w600)),
       ),
     );
   }

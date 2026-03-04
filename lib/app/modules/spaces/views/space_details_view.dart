@@ -100,7 +100,7 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
                 Text(
                   _space.name,
                   style: const TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.w700),
+                      fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -147,7 +147,7 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
         children: [
           const Text(
             'Informations générales',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 16),
           Row(
@@ -172,14 +172,14 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
           const SizedBox(height: 16),
           const Text(
             'Description',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(
             _space.description.trim().isEmpty
                 ? 'Aucune description disponible pour cet espace.'
                 : _space.description,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+            style: const TextStyle(color: Color(0xFF64748B)),
           ),
         ],
       ),
@@ -200,7 +200,7 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
         children: [
           const Text(
             'Tarification',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 14),
           _priceRow('Par Heure', _space.hourlyRate, currency),
@@ -227,7 +227,7 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
         children: [
           const Text(
             'Informations système',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 14),
           _systemRow('Créé le', _formatDate(_space.createdAt)),
@@ -260,13 +260,13 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
                 Text(
                   title,
                   style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w700),
+                      fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
                   style:
-                      const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                      const TextStyle(color: Color(0xFF64748B)),
                 ),
               ],
             ),
@@ -288,13 +288,12 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
           Text(
             '${amount.toStringAsFixed(0)} $currency',
             style: const TextStyle(
-              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: Color(0xFF1664FF),
             ),
@@ -313,7 +312,7 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
         Expanded(
           child: Text(
             '$label $value',
-            style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+            style: const TextStyle(color: Color(0xFF64748B)),
           ),
         ),
       ],
@@ -328,7 +327,7 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Text(text, style: const TextStyle(fontSize: 11)),
+      child: Text(text, style: const TextStyle()),
     );
   }
 
@@ -356,7 +355,7 @@ class _SpaceDetailsViewState extends State<SpaceDetailsView> {
       ),
       child: Text(
         displayStatus,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fg),
+        style: TextStyle(fontWeight: FontWeight.w600, color: fg),
       ),
     );
   }

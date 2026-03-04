@@ -29,9 +29,28 @@ class AuthController extends GetxController {
     return null;
   }
 
+  Map<String, dynamic> _buildLoginPayload(String identifier, String password) {
+    final normalized = identifier.trim();
+    final payload = <String, dynamic>{
+      'identifier': normalized,
+      'password': password,
+    };
+
+    if (normalized.contains('@')) {
+      payload['email'] = normalized;
+    } else {
+      payload['username'] = normalized;
+    }
+
+    return payload;
+  }
+
   // 🔐 LOGIN
   Future<void> loginUser(String identifier, String password) async {
-    if (identifier.trim().isEmpty || password.trim().isEmpty) {
+    final normalizedIdentifier = identifier.trim();
+    final normalizedPassword = password.trim();
+
+    if (normalizedIdentifier.isEmpty || normalizedPassword.isEmpty) {
       Get.snackbar('Erreur', 'Remplir tous les champs');
       return;
     }
@@ -40,10 +59,10 @@ class AuthController extends GetxController {
 
     try {
       print('🔐 Tentative login...');
-      final response = await httpService.postAuth('/api/auth/local', {
-        "identifier": identifier,
-        "password": password,
-      });
+      final response = await httpService.postAuth(
+        '/api/auth/local',
+        _buildLoginPayload(normalizedIdentifier, normalizedPassword),
+      );
 
       print(
           '📥 Response: statusCode=${response.statusCode}, body=${response.body}');
@@ -94,8 +113,12 @@ class AuthController extends GetxController {
           }
         } catch (_) {}
 
-        print('⚠️ Login failed: $serverMsg');
-        Get.snackbar('Erreur', serverMsg);
+        final statusCode = response.statusCode;
+        final failureMessage =
+            statusCode == null ? serverMsg : '[$statusCode] $serverMsg';
+
+        print('⚠️ Login failed: $failureMessage');
+        Get.snackbar('Erreur', failureMessage);
       }
     } catch (e) {
       print('❌ Login exception: $e');

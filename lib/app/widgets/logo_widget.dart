@@ -54,7 +54,7 @@ class LogoWidget extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             label!,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
           ),
         ],
       ],

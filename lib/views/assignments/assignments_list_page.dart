@@ -81,7 +81,6 @@ class _AssignmentsListContentState extends State<_AssignmentsListContent> {
                       Text(
                         'Devoirs',
                         style: TextStyle(
-                          fontSize: 40,
                           height: 1.02,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF212121),
@@ -93,7 +92,6 @@ class _AssignmentsListContentState extends State<_AssignmentsListContent> {
                   Text(
                     'Gérez les devoirs et les évaluations',
                     style: TextStyle(
-                      fontSize: 20,
                       color: Color(0xFF757575),
                     ),
                   ),
@@ -210,7 +208,6 @@ class _AssignmentsListContentState extends State<_AssignmentsListContent> {
                               Text(
                                 controller.errorMessage.value,
                                 style: const TextStyle(
-                                  fontSize: 14,
                                   color: Color(0xFF64748B),
                                 ),
                                 textAlign: TextAlign.center,
@@ -240,7 +237,6 @@ class _AssignmentsListContentState extends State<_AssignmentsListContent> {
                               Text(
                                 'Aucun devoir trouvé',
                                 style: TextStyle(
-                                  fontSize: 16,
                                   color: Color(0xFF94A3B8),
                                 ),
                               ),
@@ -268,7 +264,6 @@ class _AssignmentsListContentState extends State<_AssignmentsListContent> {
                                   child: Text(
                                     item.title,
                                     style: const TextStyle(
-                                      fontSize: 14,
                                       color: Color(0xFF111827),
                                     ),
                                   ),
@@ -278,7 +273,6 @@ class _AssignmentsListContentState extends State<_AssignmentsListContent> {
                                   child: Text(
                                     item.courseName,
                                     style: const TextStyle(
-                                      fontSize: 14,
                                       color: Color(0xFF111827),
                                     ),
                                   ),
@@ -288,7 +282,6 @@ class _AssignmentsListContentState extends State<_AssignmentsListContent> {
                                   child: Text(
                                     _formatDate(item.dueDate),
                                     style: const TextStyle(
-                                      fontSize: 14,
                                       color: Color(0xFF111827),
                                     ),
                                   ),
@@ -298,7 +291,6 @@ class _AssignmentsListContentState extends State<_AssignmentsListContent> {
                                   child: Text(
                                     item.maxPoints.toString(),
                                     style: const TextStyle(
-                                      fontSize: 14,
                                       color: Color(0xFF111827),
                                     ),
                                   ),
@@ -317,11 +309,20 @@ class _AssignmentsListContentState extends State<_AssignmentsListContent> {
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 6,
                                           ),
-                                          onPressed: () => Get.to(
-                                            () => AssignmentDetailsPage(
-                                              assignment: item,
-                                            ),
-                                          ),
+                                          onPressed: () async {
+                                            final detailed = await controller
+                                                .fetchAssignmentById(
+                                              item.id,
+                                              documentId: item.documentId,
+                                            );
+                                            if (detailed == null) return;
+
+                                            Get.to(
+                                              () => AssignmentDetailsPage(
+                                                assignment: detailed,
+                                              ),
+                                            );
+                                          },
                                           icon: const Icon(
                                             Icons.remove_red_eye_outlined,
                                             color: Color(0xFF6B7280),
@@ -416,7 +417,6 @@ class _HeadCell extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        fontSize: 13,
         fontWeight: FontWeight.w600,
         color: Color(0xFF111827),
       ),

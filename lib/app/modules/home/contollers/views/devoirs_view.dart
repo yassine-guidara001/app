@@ -92,7 +92,6 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                     Text(
                       'Devoirs',
                       style: TextStyle(
-                        fontSize: 40,
                         height: 1.02,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF0F172A),
@@ -103,7 +102,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                 SizedBox(height: 4),
                 Text(
                   'Gérez les devoirs et les évaluations',
-                  style: TextStyle(fontSize: 22, color: _muted),
+                  style: TextStyle(color: _muted),
                 ),
               ],
             ),
@@ -188,7 +187,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                   child: Center(
                     child: Text(
                       'Aucun devoir trouvé',
-                      style: TextStyle(color: Color(0xFF94A3B8), fontSize: 16),
+                      style: TextStyle(color: Color(0xFF94A3B8), ),
                     ),
                   ),
                 )
@@ -222,7 +221,6 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                 Text(
                   'Nouveau Devoir',
                   style: TextStyle(
-                    fontSize: 40,
                     height: 1.02,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF0F172A),
@@ -231,7 +229,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                 SizedBox(height: 2),
                 Text(
                   'Créez un nouveau devoir pour vos étudiants',
-                  style: TextStyle(fontSize: 22, color: _muted),
+                  style: TextStyle(color: _muted),
                 ),
               ],
             ),
@@ -270,7 +268,6 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                       child: const Text(
                         'Créer un devoir',
                         style: TextStyle(
-                          fontSize: 42,
                           height: 1,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF0F172A),
@@ -316,7 +313,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                             const SizedBox(height: 4),
                             const Text(
                               'Choisissez le cours auquel ce devoir appartient',
-                              style: TextStyle(fontSize: 12, color: _muted),
+                              style: TextStyle(color: _muted),
                             ),
                             const SizedBox(height: 12),
                             const _FormLabel('Instructions *'),
@@ -332,7 +329,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                             const SizedBox(height: 4),
                             const Text(
                               'Fournissez des instructions claires pour les étudiants',
-                              style: TextStyle(fontSize: 12, color: _muted),
+                              style: TextStyle(color: _muted),
                             ),
                             const SizedBox(height: 12),
                             Row(
@@ -359,7 +356,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                                       const Text(
                                         'Date limite de soumission',
                                         style: TextStyle(
-                                            fontSize: 12, color: _muted),
+                                            color: _muted),
                                       ),
                                     ],
                                   ),
@@ -381,7 +378,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                                       const Text(
                                         'Note maximale possible',
                                         style: TextStyle(
-                                            fontSize: 12, color: _muted),
+                                            color: _muted),
                                       ),
                                     ],
                                   ),
@@ -399,7 +396,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                             const SizedBox(height: 4),
                             const Text(
                               'Note minimale requise pour réussir le devoir',
-                              style: TextStyle(fontSize: 12, color: _muted),
+                              style: TextStyle(color: _muted),
                             ),
                             const SizedBox(height: 12),
                             Container(
@@ -428,14 +425,12 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                                           'Autoriser les soumissions en retard',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
-                                            fontSize: 13,
-                                          ),
+                                            ),
                                         ),
                                         SizedBox(height: 2),
                                         Text(
                                           'Les étudiants pourront soumettre après la date d\'échéance',
                                           style: TextStyle(
-                                            fontSize: 12,
                                             color: _muted,
                                           ),
                                         ),
@@ -465,7 +460,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                                   SizedBox(height: 2),
                                   Text(
                                     'Télécharger un document',
-                                    style: TextStyle(fontSize: 12),
+                                    style: TextStyle(),
                                   ),
                                 ],
                               ),
@@ -473,7 +468,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
                             const SizedBox(height: 4),
                             const Text(
                               'Formats acceptés: PDF, Word, PowerPoint, TXT, ZIP',
-                              style: TextStyle(fontSize: 11, color: _muted),
+                              style: TextStyle(color: _muted),
                             ),
                           ],
                         ),
@@ -557,7 +552,7 @@ class _DevoirsPageState extends State<_DevoirsPage> {
   static InputDecoration _fieldDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+      hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -587,7 +582,6 @@ class _HeadCell extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        fontSize: 14,
         fontWeight: FontWeight.w700,
         color: Color(0xFF0F172A),
       ),
@@ -605,7 +599,6 @@ class _FormLabel extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        fontSize: 13,
         fontWeight: FontWeight.w700,
         color: Color(0xFF111827),
       ),

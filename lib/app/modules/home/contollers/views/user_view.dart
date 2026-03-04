@@ -68,7 +68,7 @@ class UserView extends StatelessWidget {
               style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
-                  fontSize: 14)),
+                  )),
           const Icon(Icons.keyboard_arrow_down, color: Colors.black, size: 18),
         ],
       ),
@@ -88,14 +88,13 @@ class UserView extends StatelessWidget {
                 SizedBox(width: 12),
                 Text("Gestion des utilisateurs",
                     style: TextStyle(
-                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1E293B))),
               ],
             ),
             SizedBox(height: 4),
             Text("Gérez les utilisateurs et leurs permissions",
-                style: TextStyle(color: Colors.grey, fontSize: 14)),
+                style: TextStyle(color: Colors.grey, )),
           ],
         ),
         ElevatedButton.icon(
@@ -215,8 +214,7 @@ class UserView extends StatelessWidget {
         style: const TextStyle(
           fontWeight: FontWeight.bold,
           color: Color(0xFF64748B),
-          fontSize: 14,
-        ),
+          ),
       ),
     );
   }
@@ -234,13 +232,13 @@ class UserView extends StatelessWidget {
               children: [
                 Text(user.username,
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15)),
+                        fontWeight: FontWeight.bold, )),
                 const SizedBox(height: 2),
                 Row(
                   children: [
                     Text("ID: ${user.id}",
                         style:
-                            const TextStyle(color: Colors.grey, fontSize: 12)),
+                            const TextStyle(color: Colors.grey, )),
                     const SizedBox(width: 4),
                     const Icon(Icons.copy, size: 12, color: Colors.grey),
                   ],
@@ -365,7 +363,6 @@ class UserView extends StatelessWidget {
         status,
         style: TextStyle(
           color: isBlocked ? const Color(0xFF991B1B) : const Color(0xFF166534),
-          fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -414,14 +411,14 @@ class UserView extends StatelessWidget {
                               ? "Modifier l'utilisateur"
                               : "Nouvel utilisateur",
                           style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
+                              fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
                       Text(
                           isEditing
                               ? "Modifiez les informations de l'utilisateur."
                               : "Ajoutez un nouvel utilisateur au système.",
                           style: const TextStyle(
-                              color: Colors.grey, fontSize: 13)),
+                              color: Colors.grey, )),
                     ],
                   ),
                   IconButton(
@@ -434,13 +431,13 @@ class UserView extends StatelessWidget {
 
               /// Nom d'utilisateur
               const Text("Nom d'utilisateur",
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w500, )),
               const SizedBox(height: 8),
               TextField(
                 controller: name,
                 decoration: InputDecoration(
                   hintText: "johndoe",
-                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                  hintStyle: const TextStyle(color: Colors.grey, ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
                   contentPadding:
@@ -457,13 +454,13 @@ class UserView extends StatelessWidget {
 
               /// Email
               const Text("Email",
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w500, )),
               const SizedBox(height: 8),
               TextField(
                 controller: email,
                 decoration: InputDecoration(
                   hintText: "john@example.com",
-                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                  hintStyle: const TextStyle(color: Colors.grey, ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
                   contentPadding:
@@ -480,7 +477,7 @@ class UserView extends StatelessWidget {
 
               /// Rôle
               const Text("Rôle",
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w500, )),
               const SizedBox(height: 8),
               Obx(() => Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -495,7 +492,7 @@ class UserView extends StatelessWidget {
                             roles.contains(rxRole.value) ? rxRole.value : null,
                         hint: const Text(
                           "Sélectionner un rôle",
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                          style: TextStyle(color: Colors.grey, ),
                         ),
                         isExpanded: true,
                         icon: const Icon(Icons.keyboard_arrow_down,
@@ -520,7 +517,7 @@ class UserView extends StatelessWidget {
                 /// Mot de passe (seulement à la création)
                 const Text("Mot de passe",
                     style:
-                        TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                        TextStyle(fontWeight: FontWeight.w500, )),
                 const SizedBox(height: 8),
                 TextField(
                   controller: password,
@@ -528,7 +525,7 @@ class UserView extends StatelessWidget {
                   decoration: InputDecoration(
                     hintText: "******",
                     hintStyle:
-                        const TextStyle(color: Colors.grey, fontSize: 14),
+                        const TextStyle(color: Colors.grey, ),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     contentPadding: const EdgeInsets.symmetric(
@@ -559,7 +556,7 @@ class UserView extends StatelessWidget {
                         },
                         activeColor: Colors.blue,
                       )),
-                  const Text("Confirmé", style: TextStyle(fontSize: 14)),
+                  const Text("Confirmé", style: TextStyle()),
                   const SizedBox(width: 24),
                   Obx(() => Switch(
                         value: rxBlocked.value,
@@ -573,7 +570,7 @@ class UserView extends StatelessWidget {
                         },
                         activeColor: Colors.blue,
                       )),
-                  const Text("Bloqué", style: TextStyle(fontSize: 14)),
+                  const Text("Bloqué", style: TextStyle()),
                 ],
               ),
               const SizedBox(height: 24),

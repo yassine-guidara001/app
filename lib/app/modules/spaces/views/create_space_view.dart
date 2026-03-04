@@ -165,7 +165,6 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
               Text(
                 isEdit ? "Modifier l'espace" : "Créer un espace",
                 style: const TextStyle(
-                  fontSize: 40,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF0F172A),
                   height: 1.05,
@@ -176,7 +175,7 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
                 isEdit
                     ? "Modifiez les informations de l'espace de coworking"
                     : "Ajoutez un nouvel espace à votre espace de coworking",
-                style: const TextStyle(color: _muted, fontSize: 21),
+                style: const TextStyle(color: _muted, ),
               ),
             ],
           ),
@@ -382,7 +381,6 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
           label,
           style: const TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 13,
             color: Color(0xFF1E293B),
           ),
         ),
@@ -399,7 +397,7 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
           },
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+            hintStyle: const TextStyle(color: Colors.grey, ),
             filled: true,
             fillColor: _fieldBg,
             contentPadding:
@@ -435,7 +433,6 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
           label,
           style: const TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 13,
             color: Color(0xFF1E293B),
           ),
         ),
@@ -486,7 +483,7 @@ class _CreateSpaceViewState extends State<CreateSpaceView> {
             ),
           ),
           const SizedBox(width: 10),
-          Text(label, style: const TextStyle(fontSize: 13)),
+          Text(label, style: const TextStyle()),
         ],
       ),
     );

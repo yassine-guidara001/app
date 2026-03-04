@@ -73,7 +73,6 @@ class LoginPage extends StatelessWidget {
                                       'S',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 24,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -83,7 +82,6 @@ class LoginPage extends StatelessWidget {
                                 const Text(
                                   "SUNSPACE",
                                   style: TextStyle(
-                                    fontSize: 22,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black87,
                                   ),
@@ -93,7 +91,6 @@ class LoginPage extends StatelessWidget {
                                 const Text(
                                   "Connexion à votre compte",
                                   style: TextStyle(
-                                    fontSize: 14,
                                     color: Colors.grey,
                                     fontWeight: FontWeight.normal,
                                   ),
@@ -105,7 +102,6 @@ class LoginPage extends StatelessWidget {
                                   child: Text(
                                     "Adresse email",
                                     style: TextStyle(
-                                      fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black,
                                     ),
@@ -143,7 +139,6 @@ class LoginPage extends StatelessWidget {
                                     const Text(
                                       "Mot de passe",
                                       style: TextStyle(
-                                        fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black,
                                       ),
@@ -160,7 +155,6 @@ class LoginPage extends StatelessWidget {
                                         "Mot de passe oublié?",
                                         style: TextStyle(
                                           color: Color(0xFF2563EB),
-                                          fontSize: 13,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -219,7 +213,6 @@ class LoginPage extends StatelessWidget {
                                             child: const Text(
                                               "Se connecter →",
                                               style: TextStyle(
-                                                fontSize: 16,
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -243,8 +236,7 @@ class LoginPage extends StatelessWidget {
                                         "Ou",
                                         style: TextStyle(
                                           color: Colors.grey.shade600,
-                                          fontSize: 12,
-                                        ),
+                                          ),
                                       ),
                                     ),
                                     Expanded(
@@ -265,14 +257,12 @@ class LoginPage extends StatelessWidget {
                                           text: "Pas encore de compte ? ",
                                           style: TextStyle(
                                             color: Colors.grey,
-                                            fontSize: 14,
-                                          ),
+                                            ),
                                         ),
                                         TextSpan(
                                           text: "S'inscrire",
                                           style: TextStyle(
                                             color: Color(0xFF2563EB),
-                                            fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),

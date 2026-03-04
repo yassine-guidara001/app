@@ -18,6 +18,8 @@ dependencies:
   # HTTP & API
   http: ^1.1.0
   dio: ^5.8.0+1
+  file_picker: ^8.1.2
+  url_launcher: ^6.3.1
 
   # LOCAL STORAGE
   get_storage: ^2.1.1

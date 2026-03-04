@@ -5,6 +5,7 @@ import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dar
 
 class CustomSidebar extends StatelessWidget {
   const CustomSidebar({super.key});
+
   @override
   Widget build(BuildContext context) {
     final HomeController controller = Get.find<HomeController>();
@@ -33,9 +34,9 @@ class CustomSidebar extends StatelessWidget {
                 child: const Center(
                   child: Text("S",
                       style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20)),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      )),
                 ),
               ),
               const SizedBox(width: 12),
@@ -43,14 +44,15 @@ class CustomSidebar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("SUNSPACE",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text("Dashboard",
-                      style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      )),
+                  Text("Dashboard", style: TextStyle(color: Colors.grey)),
                 ],
               ),
             ],
           ),
+
           const SizedBox(height: 40),
 
           /// Scrollable Menu Items
@@ -68,7 +70,6 @@ class CustomSidebar extends StatelessWidget {
                   const Text("GESTION",
                       style: TextStyle(
                           color: Colors.grey,
-                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.1)),
                   const SizedBox(height: 12),
@@ -86,7 +87,6 @@ class CustomSidebar extends StatelessWidget {
                   const Text("ENSEIGNANT",
                       style: TextStyle(
                           color: Colors.grey,
-                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.1)),
                   const SizedBox(height: 12),
@@ -99,6 +99,29 @@ class CustomSidebar extends StatelessWidget {
                   _menuItem(controller, 8, Icons.chrome_reader_mode_outlined,
                       "Devoirs", Routes.DEVOIRS),
                   _menuItem(controller, 9, Icons.forum_outlined,
+                      "Communication", Routes.COMMUNICATION),
+                  const SizedBox(height: 24),
+
+                  /// ETUDIANT Section
+                  const Text("ÉTUDIANT",
+                      style: TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1)),
+                  const SizedBox(height: 12),
+                  _menuItem(controller, 10, Icons.menu_book_outlined,
+                      "Mes cours", Routes.FORMATIONS),
+                  _menuItem(controller, 11, Icons.assignment_outlined,
+                      "Mes devoirs", Routes.DEVOIRS),
+                  _menuItem(controller, 12, Icons.school_outlined,
+                      "Catalogue Cours", Routes.FORMATIONS),
+                  _menuItem(controller, 13, Icons.apartment_outlined,
+                      "Espaces d'étude", Routes.SPACES),
+                  _menuItem(controller, 14, Icons.calendar_today_outlined,
+                      "Sessions", Routes.SESSIONS),
+                  _menuItem(controller, 15, Icons.place_outlined,
+                      "Plan des espaces", Routes.SPACES),
+                  _menuItem(controller, 16, Icons.groups_outlined,
                       "Communication", Routes.COMMUNICATION),
                 ],
               ),
@@ -119,8 +142,7 @@ class CustomSidebar extends StatelessWidget {
                 CircleAvatar(
                   radius: 16,
                   backgroundColor: Colors.blue,
-                  child: Text("A",
-                      style: TextStyle(color: Colors.white, fontSize: 12)),
+                  child: Text("A", style: TextStyle(color: Colors.white)),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -128,10 +150,9 @@ class CustomSidebar extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("Utilisateur",
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Text("admin@sunspace.app",
-                          style: TextStyle(fontSize: 10, color: Colors.grey)),
+                          style: TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ),
@@ -156,8 +177,7 @@ class CustomSidebar extends StatelessWidget {
                   Icon(Icons.logout, size: 18, color: Colors.grey),
                   const SizedBox(width: 8),
                   Text("Déconnexion",
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      style: TextStyle(fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
@@ -192,7 +212,6 @@ class CustomSidebar extends StatelessWidget {
                 style: TextStyle(
                   color: isSelected ? Colors.blue : const Color(0xFF1E293B),
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  fontSize: 14,
                 ),
               ),
               if (title == "Réservations") ...[

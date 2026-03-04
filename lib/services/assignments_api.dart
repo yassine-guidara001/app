@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_getx_app/app/core/service/auth_service.dart';
@@ -20,38 +19,111 @@ class AssignmentsApi {
       : _authService = authService ?? Get.find<AuthService>();
 
   Future<List<Assignment>> getAssignments() async {
-    final uri = Uri.parse(
-        '$_baseApiUrl/assignments?populate=course&sort=createdAt:desc');
-    debugPrint('[AssignmentsAPI] GET $uri');
+    final userId = _authService.currentUserId;
 
-    final response = await http
-        .get(uri, headers: _authService.authHeaders)
-        .timeout(_requestTimeout);
-    _logResponse(response);
-    _throwIfError(response);
+    final populateQuery = [
+      'populate=course',
+      'populate=submissions',
+      'populate=attachment',
+    ].join('&');
 
-    final decoded = _decodeMap(response.body);
-    final data = decoded['data'];
-    if (data is List) {
-      return data
-          .whereType<Map>()
-          .map((item) => Assignment.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
+    final filteredUri = Uri.parse(
+      userId == null
+          ? '$_baseApiUrl/assignments?$populateQuery'
+          : '$_baseApiUrl/assignments?filters[course][instructor][id][\$eq]=$userId&$populateQuery',
+    );
+
+    final fallbackUri = Uri.parse('$_baseApiUrl/assignments?$populateQuery');
+
+    final candidateUris = <Uri>[
+      filteredUri,
+      if (filteredUri.toString() != fallbackUri.toString()) fallbackUri,
+    ];
+
+    http.Response? lastResponse;
+
+    for (final uri in candidateUris) {
+      debugPrint('[AssignmentsAPI] GET $uri');
+
+      final response = await http
+          .get(uri, headers: _authService.authHeaders)
+          .timeout(_requestTimeout);
+
+      _logResponse(response);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = _decodeMap(response.body);
+        final data = decoded['data'];
+        if (data is List) {
+          return data
+              .whereType<Map>()
+              .map(
+                (item) => Assignment.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList();
+        }
+        return const <Assignment>[];
+      }
+
+      lastResponse = response;
+
+      if (response.statusCode == 400 ||
+          response.statusCode == 404 ||
+          response.statusCode == 422) {
+        continue;
+      }
+
+      _throwIfError(response);
     }
+
+    if (lastResponse != null) {
+      _throwIfError(lastResponse);
+    }
+
     return const <Assignment>[];
   }
 
-  Future<Assignment> getAssignmentById(int id) async {
-    final uri = Uri.parse('$_baseApiUrl/assignments/$id?populate=course');
-    debugPrint('[AssignmentsAPI] GET $uri');
+  Future<Assignment> getAssignmentById(
+    int id, {
+    String? documentId,
+  }) async {
+    final trimmedDocumentId = documentId?.trim() ?? '';
+    final candidateUris = <Uri>[
+      if (trimmedDocumentId.isNotEmpty)
+        Uri.parse(
+            '$_baseApiUrl/assignments/${Uri.encodeComponent(trimmedDocumentId)}?populate=*'),
+      Uri.parse('$_baseApiUrl/assignments/$id?populate=*'),
+    ];
 
-    final response = await http
-        .get(uri, headers: _authService.authHeaders)
-        .timeout(_requestTimeout);
-    _logResponse(response);
-    _throwIfError(response);
+    http.Response? lastResponse;
 
-    return Assignment.fromJson(_decodeMap(response.body));
+    for (final uri in candidateUris) {
+      debugPrint('[AssignmentsAPI] GET $uri');
+
+      final response = await http
+          .get(uri, headers: _authService.authHeaders)
+          .timeout(_requestTimeout);
+
+      _logResponse(response);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Assignment.fromJson(_decodeMap(response.body));
+      }
+
+      lastResponse = response;
+
+      if (response.statusCode == 404) {
+        continue;
+      }
+
+      _throwIfError(response);
+    }
+
+    if (lastResponse != null) {
+      _throwIfError(lastResponse);
+    }
+
+    throw Exception('Ressource introuvable');
   }
 
   Future<Assignment> createAssignment(Map data) async {
@@ -122,7 +194,7 @@ class AssignmentsApi {
     _throwIfError(response);
   }
 
-  Future<String> uploadAttachment(dynamic file) async {
+  Future<Map<String, dynamic>> uploadAttachment(dynamic file) async {
     final uri = Uri.parse('$_baseApiUrl/upload');
     debugPrint('[AssignmentsAPI] POST $uri (upload)');
 
@@ -132,17 +204,26 @@ class AssignmentsApi {
     }
 
     final bytes = _extractFileBytes(file);
+    final path = _extractFilePath(file);
     final filename = _extractFileName(file);
 
-    if (bytes == null || bytes.isEmpty || filename.isEmpty) {
+    final hasBytes = bytes != null && bytes.isNotEmpty;
+    final hasPath = path != null && path.isNotEmpty;
+
+    if ((!hasBytes && !hasPath) || filename.isEmpty) {
       throw Exception('Fichier invalide pour upload');
     }
 
-    final request = http.MultipartRequest('POST', uri)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..files.add(
-        http.MultipartFile.fromBytes('files', bytes, filename: filename),
+    final request = http.MultipartRequest('POST', uri);
+    request.headers['Authorization'] = 'Bearer $token';
+
+    if (hasPath && !kIsWeb) {
+      request.files.add(await http.MultipartFile.fromPath('files', path));
+    } else {
+      request.files.add(
+        http.MultipartFile.fromBytes('files', bytes!, filename: filename),
       );
+    }
 
     final streamed = await request.send().timeout(_requestTimeout);
     final response = await http.Response.fromStream(streamed);
@@ -154,14 +235,24 @@ class AssignmentsApi {
     if (decoded is List && decoded.isNotEmpty) {
       final first = decoded.first;
       if (first is Map<String, dynamic>) {
+        final fileId = _toIntNullable(first['id']);
+        if (fileId == null) {
+          throw Exception('ID de fichier introuvable');
+        }
+
         final rawUrl = (first['url'] ?? '').toString();
         if (rawUrl.isEmpty) {
           throw Exception('URL de fichier introuvable');
         }
-        if (rawUrl.startsWith('http')) {
-          return rawUrl;
-        }
-        return '$_serverBaseUrl$rawUrl';
+
+        final fileUrl =
+            rawUrl.startsWith('http') ? rawUrl : '$_serverBaseUrl$rawUrl';
+
+        return {
+          'id': fileId,
+          'url': fileUrl,
+          'name': (first['name'] ?? filename).toString(),
+        };
       }
     }
 
@@ -171,11 +262,18 @@ class AssignmentsApi {
   Map<String, dynamic> _sanitizePayload(Map<String, dynamic> source) {
     final normalizedDescription =
         _normalizeDescription(source['description'] ?? source['instructions']);
+    final hasAttachmentField =
+        source.containsKey('attachment') || source.containsKey('attachmentId');
+    final resolvedCourse = _resolveCourseRelation(source);
+
+    final attachmentValue = source.containsKey('attachmentId')
+        ? source['attachmentId']
+        : source['attachment'];
 
     final payload = <String, dynamic>{
       'title': source['title'],
       'description': normalizedDescription,
-      'course': source['course'] ?? source['courseId'],
+      'course': resolvedCourse,
       'due_date': source['due_date'] ?? source['dueDate'],
       'max_points': source['max_points'] ?? source['maxPoints'] ?? 100,
       'passing_score': source['passing_score'] ??
@@ -185,14 +283,34 @@ class AssignmentsApi {
       'allow_late_submission': source['allow_late_submission'] ??
           source['allowLateSubmission'] ??
           false,
-      'attachment': source['attachment'] ??
-          source['attachmentId'] ??
-          source['attachmentUrl'] ??
-          source['attachment_url'],
+      'attachment': attachmentValue,
     };
 
-    payload.removeWhere((key, value) => value == null);
+    payload.removeWhere(
+      (key, value) =>
+          value == null && !(hasAttachmentField && key == 'attachment'),
+    );
     return payload;
+  }
+
+  dynamic _resolveCourseRelation(Map<String, dynamic> source) {
+    final rawCourse = source['course'];
+    final fallbackCourseId =
+        _toIntNullable(source['courseId'] ?? source['course_id']);
+
+    if (rawCourse is int) return rawCourse;
+    if (rawCourse is num) return rawCourse.toInt();
+    if (fallbackCourseId != null) return fallbackCourseId;
+
+    if (rawCourse is String) {
+      final trimmed = rawCourse.trim();
+      if (trimmed.isEmpty) return null;
+      final numeric = int.tryParse(trimmed);
+      if (numeric != null) return numeric;
+      return trimmed;
+    }
+
+    return rawCourse;
   }
 
   List<Map<String, dynamic>>? _normalizeDescription(dynamic value) {
@@ -289,11 +407,28 @@ class AssignmentsApi {
     return null;
   }
 
+  String? _extractFilePath(dynamic file) {
+    if (file is Map<String, dynamic>) {
+      final path = file['path']?.toString().trim();
+      if (path != null && path.isNotEmpty) {
+        return path;
+      }
+    }
+    return null;
+  }
+
   String _extractFileName(dynamic file) {
     if (file is Map<String, dynamic>) {
       final name = file['name']?.toString() ?? '';
       return name.trim();
     }
     return '';
+  }
+
+  int? _toIntNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
   }
 }

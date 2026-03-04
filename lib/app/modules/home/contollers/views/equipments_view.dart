@@ -68,7 +68,7 @@ class EquipmentsView extends StatelessWidget {
                     onChanged: (val) {},
                     decoration: const InputDecoration(
                       hintText: "Rechercher...",
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                      hintStyle: TextStyle(color: Colors.grey, ),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -91,7 +91,7 @@ class EquipmentsView extends StatelessWidget {
               style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
-                  fontSize: 14)),
+                  )),
           const Icon(Icons.keyboard_arrow_down, color: Colors.black, size: 18),
         ],
       ),
@@ -108,13 +108,12 @@ class EquipmentsView extends StatelessWidget {
             Text(
               "Gestion des Équipements",
               style: TextStyle(
-                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1E293B)),
             ),
             Text(
               "Gérez tous les équipements de vos espaces",
-              style: TextStyle(color: Colors.grey, fontSize: 14),
+              style: TextStyle(color: Colors.grey, ),
             ),
           ],
         ),
@@ -156,7 +155,7 @@ class EquipmentsView extends StatelessWidget {
                     onChanged: controller.searchEquipments,
                     decoration: const InputDecoration(
                       hintText: "Rechercher un équipement...",
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                      hintStyle: TextStyle(color: Colors.grey, ),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -178,7 +177,7 @@ class EquipmentsView extends StatelessWidget {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: "Tous les statuts",
-              style: const TextStyle(color: Colors.black, fontSize: 14),
+              style: const TextStyle(color: Colors.black, ),
               icon: const Icon(Icons.keyboard_arrow_down, size: 18),
               items: ["Tous les statuts", "Disponible", "Maintenance", "Occupé"]
                   .map((String value) => DropdownMenuItem<String>(
@@ -250,7 +249,7 @@ class EquipmentsView extends StatelessWidget {
         label,
         textAlign: align,
         style: const TextStyle(
-            fontWeight: FontWeight.bold, color: Colors.black, fontSize: 13),
+            fontWeight: FontWeight.bold, color: Colors.black, ),
       ),
     );
   }
@@ -265,7 +264,7 @@ class EquipmentsView extends StatelessWidget {
             child: Text(
               equipment.name,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+              style: const TextStyle(fontWeight: FontWeight.w500, ),
             ),
           ),
           Expanded(
@@ -273,7 +272,7 @@ class EquipmentsView extends StatelessWidget {
             child: Text(
               equipment.type,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+              style: const TextStyle(color: Color(0xFF64748B), ),
             ),
           ),
           Expanded(
@@ -282,7 +281,7 @@ class EquipmentsView extends StatelessWidget {
               child: Text(
                 equipment.serialNumber,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                style: const TextStyle(color: Color(0xFF64748B), ),
               ),
             ),
           ),
@@ -296,7 +295,7 @@ class EquipmentsView extends StatelessWidget {
               child: Text(
                 equipment.pricePerDay.toStringAsFixed(2),
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                style: const TextStyle(color: Color(0xFF64748B), ),
               ),
             ),
           ),
@@ -306,7 +305,7 @@ class EquipmentsView extends StatelessWidget {
               child: Text(
                 equipment.spaceLabel,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                style: const TextStyle(color: Color(0xFF64748B), ),
               ),
             ),
           ),
@@ -373,7 +372,7 @@ class EquipmentsView extends StatelessWidget {
             color: bgColor, borderRadius: BorderRadius.circular(6)),
         child: Text(status,
             style: TextStyle(
-                color: textColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                color: textColor, fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -475,13 +474,13 @@ class EquipmentsView extends StatelessWidget {
                                 ? "Modifier l'équipement"
                                 : "Ajouter un équipement",
                             style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold)),
+                                fontWeight: FontWeight.bold)),
                         Text(
                             isEditing
                                 ? "Modifiez les informations de l'équipement."
                                 : "Ajoutez un nouvel équipement à votre inventaire.",
                             style: const TextStyle(
-                                color: Colors.grey, fontSize: 13)),
+                                color: Colors.grey, )),
                       ],
                     ),
                     IconButton(
@@ -646,7 +645,6 @@ class EquipmentsView extends StatelessWidget {
         Text(label,
             style: const TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 13,
                 color: Color(0xFF1E293B))),
         const SizedBox(height: 8),
         TextField(
@@ -656,10 +654,10 @@ class EquipmentsView extends StatelessWidget {
           readOnly: readOnly,
           showCursor: !readOnly,
           onTap: onTap,
-          style: const TextStyle(fontSize: 14),
+          style: const TextStyle(),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+            hintStyle: const TextStyle(color: Colors.grey, ),
             suffixIcon: icon != null
                 ? IconButton(
                     onPressed: onTap,
@@ -692,7 +690,6 @@ class EquipmentsView extends StatelessWidget {
         Text(label,
             style: const TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 13,
                 color: Color(0xFF1E293B))),
         const SizedBox(height: 8),
         Obx(() => Container(
@@ -711,7 +708,7 @@ class EquipmentsView extends StatelessWidget {
                     return DropdownMenuItem<String>(
                         value: value,
                         child:
-                            Text(value, style: const TextStyle(fontSize: 14)));
+                            Text(value, style: const TextStyle()));
                   }).toList(),
                   onChanged: (val) => rxValue.value = val!,
                 ),

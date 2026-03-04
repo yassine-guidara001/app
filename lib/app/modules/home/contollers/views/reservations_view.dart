@@ -50,7 +50,7 @@ class ReservationsView extends StatelessWidget {
               style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
-                  fontSize: 18)),
+                  )),
           Spacer(),
           Icon(Icons.notifications_outlined, color: Colors.grey, size: 20),
           SizedBox(width: 16),
@@ -64,7 +64,7 @@ class ReservationsView extends StatelessWidget {
               style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
-                  fontSize: 14)),
+                  )),
           Icon(Icons.keyboard_arrow_down, color: Colors.black, size: 18),
         ],
       ),
@@ -88,11 +88,10 @@ class ReservationsView extends StatelessWidget {
           children: [
             Text("Réservations",
                 style: TextStyle(
-                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1E293B))),
             Text("Gérez les réservations de vos espaces",
-                style: TextStyle(color: Colors.grey, fontSize: 13)),
+                style: TextStyle(color: Colors.grey, )),
           ],
         ),
       ],

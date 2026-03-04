@@ -17,6 +17,11 @@ class CourseController extends GetxController {
     fetchCourses();
   }
 
+  Future<void> refreshStudentCatalog() async {
+    setSearch('');
+    await fetchCourses();
+  }
+
   Future<void> fetchCourses() async {
     isLoading.value = true;
     try {

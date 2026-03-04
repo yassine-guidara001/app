@@ -3,12 +3,16 @@ class Assignment {
   final String documentId;
   final String title;
   final int? courseId;
+  final String? courseDocumentId;
   final String courseName;
   final String instructions;
   final DateTime dueDate;
   final int maxPoints;
   final int passingGrade;
   final bool allowLateSubmission;
+  final int? attachmentId;
+  final String? attachmentName;
+  final double? attachmentSizeKb;
   final String? attachmentUrl;
   final DateTime createdAt;
 
@@ -17,12 +21,16 @@ class Assignment {
     required this.documentId,
     required this.title,
     required this.courseId,
+    this.courseDocumentId,
     required this.courseName,
     required this.instructions,
     required this.dueDate,
     this.maxPoints = 100,
     this.passingGrade = 0,
     required this.allowLateSubmission,
+    this.attachmentId,
+    this.attachmentName,
+    this.attachmentSizeKb,
     this.attachmentUrl,
     required this.createdAt,
   });
@@ -32,7 +40,21 @@ class Assignment {
     final courseNode = data['course'];
     final courseData = _extractDataNodeIfMap(courseNode);
 
-    final resolvedCourseId = _toIntNullable(data['course']) ??
+    String? resolvedCourseDocumentId = _toNullableString(
+        courseData?['documentId'] ?? courseData?['document_id']);
+
+    if ((resolvedCourseDocumentId == null ||
+            resolvedCourseDocumentId.isEmpty) &&
+        courseNode is String &&
+        _toIntNullable(courseNode) == null) {
+      resolvedCourseDocumentId = courseNode.trim();
+    }
+
+    resolvedCourseDocumentId ??= _toNullableString(
+      data['courseDocumentId'] ?? data['course_document_id'],
+    );
+
+    final resolvedCourseId = _toIntNullable(courseNode) ??
         _toIntNullable(data['courseId']) ??
         _toIntNullable(courseData?['id']);
 
@@ -46,11 +68,29 @@ class Assignment {
     final dueDate = _toDateTime(data['due_date'] ?? data['dueDate']) ??
         DateTime.now().add(const Duration(days: 7));
 
+    final attachmentData = _extractMediaDataNode(data['attachment']);
+    final resolvedAttachmentId = _toIntNullable(
+      attachmentData?['id'] ?? data['attachmentId'],
+    );
+
+    final resolvedAttachmentUrl = _toNullableString(
+      attachmentData?['url'] ?? data['attachment_url'] ?? data['attachmentUrl'],
+    );
+
+    final resolvedAttachmentName = _toNullableString(
+      attachmentData?['name'] ?? data['attachmentName'],
+    );
+
+    final resolvedAttachmentSizeKb = _toDoubleNullable(
+      attachmentData?['size'] ?? data['attachmentSize'],
+    );
+
     return Assignment(
       id: _toInt(data['id']),
       documentId: (data['documentId'] ?? '').toString(),
       title: (data['title'] ?? '').toString(),
       courseId: resolvedCourseId,
+      courseDocumentId: resolvedCourseDocumentId,
       courseName: resolvedCourseName.trim().isEmpty
           ? 'Non spécifié'
           : resolvedCourseName,
@@ -67,9 +107,10 @@ class Assignment {
       allowLateSubmission: _toBool(
         data['allow_late_submission'] ?? data['allowLateSubmission'],
       ),
-      attachmentUrl: _toNullableString(
-        data['attachment_url'] ?? data['attachmentUrl'] ?? data['attachment'],
-      ),
+      attachmentId: resolvedAttachmentId,
+      attachmentName: resolvedAttachmentName,
+      attachmentSizeKb: resolvedAttachmentSizeKb,
+      attachmentUrl: resolvedAttachmentUrl,
       createdAt: _toDateTime(data['createdAt']) ?? DateTime.now(),
     );
   }
@@ -79,12 +120,13 @@ class Assignment {
       'documentId': documentId,
       'title': title,
       'course': courseId,
+      'course_document_id': courseDocumentId,
       'description': instructions,
       'due_date': dueDate.toIso8601String(),
       'max_points': maxPoints,
       'passing_score': passingGrade,
       'allow_late_submission': allowLateSubmission,
-      'attachment': attachmentUrl,
+      'attachment': attachmentId,
     };
   }
 
@@ -93,12 +135,16 @@ class Assignment {
     String? documentId,
     String? title,
     int? courseId,
+    String? courseDocumentId,
     String? courseName,
     String? instructions,
     DateTime? dueDate,
     int? maxPoints,
     int? passingGrade,
     bool? allowLateSubmission,
+    int? attachmentId,
+    String? attachmentName,
+    double? attachmentSizeKb,
     String? attachmentUrl,
     DateTime? createdAt,
   }) {
@@ -107,12 +153,16 @@ class Assignment {
       documentId: documentId ?? this.documentId,
       title: title ?? this.title,
       courseId: courseId ?? this.courseId,
+      courseDocumentId: courseDocumentId ?? this.courseDocumentId,
       courseName: courseName ?? this.courseName,
       instructions: instructions ?? this.instructions,
       dueDate: dueDate ?? this.dueDate,
       maxPoints: maxPoints ?? this.maxPoints,
       passingGrade: passingGrade ?? this.passingGrade,
       allowLateSubmission: allowLateSubmission ?? this.allowLateSubmission,
+      attachmentId: attachmentId ?? this.attachmentId,
+      attachmentName: attachmentName ?? this.attachmentName,
+      attachmentSizeKb: attachmentSizeKb ?? this.attachmentSizeKb,
       attachmentUrl: attachmentUrl ?? this.attachmentUrl,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -145,6 +195,38 @@ Map<String, dynamic>? _extractDataNodeIfMap(dynamic value) {
   return null;
 }
 
+Map<String, dynamic>? _extractMediaDataNode(dynamic value) {
+  if (value == null) return null;
+
+  if (value is Map<String, dynamic>) {
+    final nestedData = value['data'];
+    if (nestedData is Map<String, dynamic>) {
+      return _extractDataNode(nestedData);
+    }
+    if (nestedData is List) {
+      for (final item in nestedData) {
+        if (item is Map<String, dynamic>) {
+          return _extractDataNode(item);
+        }
+      }
+    }
+
+    if (value.containsKey('id') || value.containsKey('url')) {
+      return _extractDataNode(value);
+    }
+  }
+
+  if (value is List) {
+    for (final item in value) {
+      if (item is Map<String, dynamic>) {
+        return _extractDataNode(item);
+      }
+    }
+  }
+
+  return null;
+}
+
 int _toInt(dynamic value, {int fallback = 0}) {
   if (value == null) return fallback;
   if (value is int) return value;
@@ -157,6 +239,13 @@ int? _toIntNullable(dynamic value) {
   if (value is int) return value;
   if (value is num) return value.toInt();
   return int.tryParse(value.toString());
+}
+
+double? _toDoubleNullable(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
 }
 
 bool _toBool(dynamic value) {

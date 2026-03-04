@@ -82,7 +82,7 @@ class FormationsView extends GetView<HomeController> {
           const SizedBox(width: 8),
           const Text(
             'intern',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            style: TextStyle(fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -104,7 +104,6 @@ class FormationsView extends GetView<HomeController> {
                 Text(
                   'Mes Formations',
                   style: TextStyle(
-                    fontSize: 36,
                     height: 1,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF0F172A),
@@ -115,7 +114,7 @@ class FormationsView extends GetView<HomeController> {
             SizedBox(height: 8),
             Text(
               'Gérez vos cours, modules et leçons',
-              style: TextStyle(color: Color(0xFF6B7280), fontSize: 15),
+              style: TextStyle(color: Color(0xFF6B7280), ),
             ),
           ],
         ),
@@ -169,7 +168,6 @@ class FormationsView extends GetView<HomeController> {
                         const Text(
                           'Créer un nouveau cours',
                           style: TextStyle(
-                            fontSize: 27,
                             height: 1,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF0F172A),
@@ -185,13 +183,12 @@ class FormationsView extends GetView<HomeController> {
                     const SizedBox(height: 6),
                     const Text(
                       'Remplissez les détails ci-dessous pour créer un nouveau cours.',
-                      style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                      style: TextStyle(color: Color(0xFF6B7280), ),
                     ),
                     const SizedBox(height: 16),
                     const Text(
                       'Titre du cours',
                       style: TextStyle(
-                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF111827)),
                     ),
@@ -204,7 +201,6 @@ class FormationsView extends GetView<HomeController> {
                     const Text(
                       'Description',
                       style: TextStyle(
-                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF111827)),
                     ),
@@ -225,7 +221,6 @@ class FormationsView extends GetView<HomeController> {
                               const Text(
                                 'Niveau',
                                 style: TextStyle(
-                                    fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                     color: Color(0xFF111827)),
                               ),
@@ -263,7 +258,6 @@ class FormationsView extends GetView<HomeController> {
                               const Text(
                                 'Prix (TND)',
                                 style: TextStyle(
-                                    fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                     color: Color(0xFF111827)),
                               ),
@@ -284,7 +278,6 @@ class FormationsView extends GetView<HomeController> {
                     const Text(
                       'Statut',
                       style: TextStyle(
-                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF111827)),
                     ),
@@ -329,7 +322,6 @@ class FormationsView extends GetView<HomeController> {
                           child: const Text(
                             'Créer le cours',
                             style: TextStyle(
-                              fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -349,7 +341,7 @@ class FormationsView extends GetView<HomeController> {
   InputDecoration _dialogInputDecoration(String? hintText) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+      hintStyle: const TextStyle(color: Color(0xFF9CA3AF), ),
       filled: true,
       fillColor: const Color(0xFFF8FAFC),
       isDense: true,
@@ -380,7 +372,7 @@ class FormationsView extends GetView<HomeController> {
       child: TextField(
         decoration: InputDecoration(
           hintText: 'Rechercher un cours...',
-          hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+          hintStyle: const TextStyle(color: Color(0xFF9CA3AF), ),
           prefixIcon: const Icon(Icons.search, size: 18, color: Colors.grey),
           isDense: true,
           filled: true,
@@ -428,7 +420,7 @@ class FormationsView extends GetView<HomeController> {
             padding: EdgeInsets.symmetric(vertical: 28),
             child: Text(
               'Aucun cours trouvé',
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+              style: TextStyle(color: Color(0xFF64748B), ),
             ),
           ),
         ],
@@ -448,8 +440,7 @@ class _HeaderCell extends StatelessWidget {
       style: const TextStyle(
         fontWeight: FontWeight.w700,
         color: Color(0xFF0F172A),
-        fontSize: 13,
-      ),
+        ),
     );
   }
 }

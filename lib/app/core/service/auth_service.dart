@@ -37,13 +37,26 @@ class AuthService extends GetxService {
     };
   }
 
+  int? get currentUserId {
+    final user = _storage.getUserData();
+    if (user == null) return null;
+
+    final rawId = user['id'];
+    if (rawId is int) return rawId;
+    if (rawId is num) return rawId.toInt();
+    return int.tryParse(rawId?.toString() ?? '');
+  }
+
   Future<String> login({
     required String identifier,
     required String password,
   }) async {
+    final normalized = identifier.trim();
     final payload = {
-      'identifier': identifier.trim(),
+      'identifier': normalized,
       'password': password,
+      if (normalized.contains('@')) 'email': normalized,
+      if (!normalized.contains('@')) 'username': normalized,
     };
 
     print('📡 POST /auth/local');

@@ -3,12 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_getx_app/app/data/models/course_model.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/course_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
+import 'package:flutter_getx_app/app/routes/app_routes.dart';
 import 'package:get/get.dart';
 
 import 'custom_sidebar.dart';
 
 class CoursesView extends GetView<CourseController> {
   const CoursesView({super.key});
+
+  static const int _studentMyCoursesMenuIndex = 10;
+  static const int _studentCatalogMenuIndex = 12;
+
+  HomeController get _homeController => Get.find<HomeController>();
 
   @override
   Widget build(BuildContext context) {
@@ -18,28 +24,867 @@ class CoursesView extends GetView<CourseController> {
         children: [
           const CustomSidebar(),
           Expanded(
+            child: Obx(() {
+              final selectedMenu = _homeController.selectedMenu.value;
+              final isStudentMyCourses =
+                  selectedMenu == _studentMyCoursesMenuIndex;
+              final isStudentCatalog = selectedMenu == _studentCatalogMenuIndex;
+
+              if (isStudentMyCourses) {
+                return _buildStudentMyCoursesEmptyState();
+              }
+
+              if (isStudentCatalog) {
+                return _buildStudentCatalogView();
+              }
+
+              return Column(
+                children: [
+                  _buildTopBar(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(context),
+                          const SizedBox(height: 18),
+                          _buildSearchBar(),
+                          const SizedBox(height: 16),
+                          _buildCoursesTable(context),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudentMyCoursesEmptyState() {
+    return Column(
+      children: [
+        _buildTopBar(),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTopBar(),
+                const Row(
+                  children: [
+                    Icon(Icons.menu_book_outlined,
+                        color: Color(0xFF2563EB), size: 30),
+                    SizedBox(width: 10),
+                    Text(
+                      'Mes Formations',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827),
+                        height: 1,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Retrouvez ici tous les cours auxquels vous êtes inscrit.',
+                  style: TextStyle(
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(context),
-                        const SizedBox(height: 18),
-                        _buildSearchBar(),
-                        const SizedBox(height: 16),
-                        _buildCoursesTable(context),
-                      ],
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFD6DEE8)),
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 420),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 68,
+                              height: 68,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFDCEAFE),
+                              ),
+                              child: const Icon(
+                                Icons.menu_book_rounded,
+                                color: Color(0xFF2563EB),
+                                size: 38,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              "Vous n'avez pas encore de cours",
+                              style: TextStyle(
+                                color: Color(0xFF111827),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Explorez notre catalogue pour trouver la formation\nqui vous convient et commencez à apprendre dès\naujourd\'hui.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                            SizedBox(
+                              height: 40,
+                              child: ElevatedButton(
+                                onPressed: _openStudentCatalog,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2563EB),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 18),
+                                ),
+                                child: const Text(
+                                  'Voir le catalogue',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openStudentCatalog() async {
+    _homeController.selectedMenu.value = _studentCatalogMenuIndex;
+    await controller.refreshStudentCatalog();
+
+    if (Get.currentRoute != Routes.FORMATIONS) {
+      Get.toNamed(Routes.FORMATIONS);
+    }
+  }
+
+  Widget _buildStudentCatalogView() {
+    return Column(
+      children: [
+        _buildTopBar(),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStudentCatalogHeader(),
+                const SizedBox(height: 18),
+                _buildSearchBar(
+                  hintText: 'Rechercher une formation...',
+                ),
+                const SizedBox(height: 16),
+                Obx(
+                  () => Text(
+                    '${controller.filteredCourses.length} cours disponibles',
+                    style: const TextStyle(
+                      color: Color(0xFF475569),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildCatalogCards(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStudentCatalogHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.school_outlined,
+                  color: Color(0xFF2563EB),
+                  size: 30,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Catalogue de Cours',
+                  style: TextStyle(
+                    height: 1,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Explorez notre vaste sélection de formations pour booster vos compétences.',
+              style: TextStyle(
+                color: Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.grid_view_rounded, color: Color(0xFF2563EB), size: 16),
+              SizedBox(width: 12),
+              Icon(Icons.view_list_rounded, color: Color(0xFF64748B), size: 16),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCatalogCards() {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Padding(
+          padding: EdgeInsets.all(40),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      final courses = controller.filteredCourses;
+      if (courses.isEmpty) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 42),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: const Text(
+            'Aucune formation disponible',
+            style: TextStyle(
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        );
+      }
+
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 980;
+          final cardWidth =
+              isWide ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth;
+
+          return Wrap(
+            spacing: 24,
+            runSpacing: 20,
+            children: courses
+                .map(
+                  (course) => SizedBox(
+                    width: cardWidth,
+                    child: _buildCatalogCard(context, course),
+                  ),
+                )
+                .toList(),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildCatalogCard(BuildContext context, Course course) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD6DEE8)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Text(
+            course.title,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF111827),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Divider(
+            height: 1,
+            color: const Color(0xFFCBD5E1).withValues(alpha: 0.65),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 32,
+            child: ElevatedButton(
+              onPressed: () => _showEnrollmentPaymentDialog(context, course),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              child: Text(
+                _buildEnrollmentLabel(course),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
         ],
+      ),
+    );
+  }
+
+  String _buildEnrollmentLabel(Course course) {
+    if (course.price <= 0) {
+      return 'S\'inscrire - Gratuit';
+    }
+
+    return 'S\'inscrire - ${course.price.toStringAsFixed(0)} DT';
+  }
+
+  void _showEnrollmentPaymentDialog(BuildContext context, Course course) {
+    final cardholderController = TextEditingController();
+    final cardNumberController = TextEditingController();
+    final expiryController = TextEditingController();
+    final cvcController = TextEditingController();
+
+    final amountLabel =
+        course.price <= 0 ? 'Gratuit' : '${course.price.toStringAsFixed(0)} DT';
+    final payButtonLabel =
+        course.price <= 0 ? 'Payer Gratuit' : 'Payer $amountLabel';
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          child: SizedBox(
+            width: 390,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(22, 18, 22, 16),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEFF4FC),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(22),
+                          topRight: Radius.circular(22),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'PAIEMENT SÉCURISÉ',
+                                  style: TextStyle(
+                                    color: Color(0xFF111827),
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.1,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                RichText(
+                                  text: TextSpan(
+                                    style: const TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    children: [
+                                      const TextSpan(
+                                        text: 'Inscription à la formation : ',
+                                      ),
+                                      TextSpan(
+                                        text: course.title.toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Color(0xFF2563EB),
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE1ECFE),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.shield_outlined,
+                              color: Color(0xFF60A5FA),
+                              size: 22,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      right: 8,
+                      top: 6,
+                      child: IconButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        icon: const Icon(Icons.close, size: 16),
+                        color: const Color(0xFF6B7280),
+                        splashRadius: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              constraints: const BoxConstraints(minHeight: 66),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 11),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border:
+                                    Border.all(color: const Color(0xFFE5E7EB)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'MONTANT À RÉGLER',
+                                    style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 10,
+                                      letterSpacing: 0.4,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    amountLabel,
+                                    style: const TextStyle(
+                                      color: Color(0xFF2563EB),
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 17,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              constraints: const BoxConstraints(minHeight: 66),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border:
+                                    Border.all(color: const Color(0xFF3B82F6)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF2563EB),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.credit_card,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Expanded(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Carte Bancaire',
+                                          style: TextStyle(
+                                            color: Color(0xFF111827),
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 13,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          'VISA, MASTERCARD',
+                                          style: TextStyle(
+                                            color: Color(0xFF6B7280),
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 10,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 14,
+                                    height: 14,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: const Color(0xFF2563EB),
+                                          width: 2),
+                                    ),
+                                    child: Center(
+                                      child: Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0xFF2563EB),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'NOM SUR LA CARTE',
+                        style: TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: cardholderController,
+                        autofillHints: const <String>[],
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        decoration: _paymentInputDecoration('M. Jean Dupont'),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'NUMÉRO DE CARTE',
+                        style: TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: cardNumberController,
+                        autofillHints: const <String>[],
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          _CardNumberTextInputFormatter(),
+                        ],
+                        decoration: _paymentInputDecoration(
+                          '0000 0000 0000 0000',
+                          prefixIcon: const Icon(Icons.credit_card,
+                              color: Color(0xFF9CA3AF), size: 16),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'EXPIRATION',
+                                  style: TextStyle(
+                                    color: Color(0xFF6B7280),
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: expiryController,
+                                  autofillHints: const <String>[],
+                                  enableSuggestions: false,
+                                  autocorrect: false,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    _ExpiryDateTextInputFormatter(),
+                                  ],
+                                  textAlign: TextAlign.center,
+                                  decoration: _paymentInputDecoration('MM/AA'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'CVC',
+                                  style: TextStyle(
+                                    color: Color(0xFF6B7280),
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: cvcController,
+                                  autofillHints: const <String>[],
+                                  enableSuggestions: false,
+                                  autocorrect: false,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(3),
+                                  ],
+                                  textAlign: TextAlign.center,
+                                  obscureText: true,
+                                  obscuringCharacter: '•',
+                                  decoration: _paymentInputDecoration('•••'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 42,
+                              child: Stack(
+                                alignment: Alignment.centerLeft,
+                                children: [
+                                  Container(
+                                    width: 16,
+                                    height: 16,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFFF97316),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    left: 10,
+                                    child: Container(
+                                      width: 16,
+                                      height: 16,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Color(0xFFEF4444),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Text(
+                              'visa',
+                              style: TextStyle(
+                                color: Color(0xFF475569),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'PAIEMENT CRYPTÉ SSL 256 BITS',
+                                style: TextStyle(
+                                  color: Color(0xFF6B7280),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 10,
+                                  letterSpacing: 0.3,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, color: Color(0xFFE5E7EB)),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 10, 22, 18),
+                  child: Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        child: const Text(
+                          'Annuler',
+                          style: TextStyle(
+                            color: Color(0xFF111827),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      SizedBox(
+                        width: 215,
+                        height: 40,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                            Get.snackbar(
+                              'Paiement validé',
+                              'Inscription confirmée pour ${course.title}',
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF74A7F2),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            payButtonLabel,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).whenComplete(() {
+      cardholderController.dispose();
+      cardNumberController.dispose();
+      expiryController.dispose();
+      cvcController.dispose();
+    });
+  }
+
+  InputDecoration _paymentInputDecoration(String hintText,
+      {Widget? prefixIcon}) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: const TextStyle(
+        color: Color(0xFF9CA3AF),
+        fontWeight: FontWeight.w500,
+      ),
+      prefixIcon: prefixIcon,
+      filled: true,
+      fillColor: const Color(0xFFFFFFFF),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFF94A3B8), width: 1),
       ),
     );
   }
@@ -86,7 +931,7 @@ class CoursesView extends GetView<CourseController> {
           const SizedBox(width: 8),
           const Text(
             'intern',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            style: TextStyle(fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -108,7 +953,6 @@ class CoursesView extends GetView<CourseController> {
                 Text(
                   'Mes Formations',
                   style: TextStyle(
-                    fontSize: 36,
                     height: 1,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF0F172A),
@@ -119,7 +963,9 @@ class CoursesView extends GetView<CourseController> {
             SizedBox(height: 8),
             Text(
               'Gérez vos cours, modules et leçons',
-              style: TextStyle(color: Color(0xFF6B7280), fontSize: 15),
+              style: TextStyle(
+                color: Color(0xFF6B7280),
+              ),
             ),
           ],
         ),
@@ -144,7 +990,7 @@ class CoursesView extends GetView<CourseController> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar({String hintText = 'Rechercher un cours...'}) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -155,8 +1001,10 @@ class CoursesView extends GetView<CourseController> {
       child: TextField(
         onChanged: controller.setSearch,
         decoration: InputDecoration(
-          hintText: 'Rechercher un cours...',
-          hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+          hintText: hintText,
+          hintStyle: const TextStyle(
+            color: Color(0xFF9CA3AF),
+          ),
           prefixIcon: const Icon(Icons.search, size: 18, color: Colors.grey),
           isDense: true,
           filled: true,
@@ -215,7 +1063,9 @@ class CoursesView extends GetView<CourseController> {
                 padding: EdgeInsets.symmetric(vertical: 28),
                 child: Text(
                   'Aucun cours trouvé',
-                  style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                  ),
                 ),
               )
             else
@@ -243,7 +1093,9 @@ class CoursesView extends GetView<CourseController> {
             flex: 3,
             child: Text(
               course.title,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           Expanded(
@@ -301,7 +1153,6 @@ class CoursesView extends GetView<CourseController> {
         style: TextStyle(
           color:
               isPublished ? const Color(0xFF166534) : const Color(0xFF9A3412),
-          fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -339,7 +1190,6 @@ class CoursesView extends GetView<CourseController> {
                       Text(
                         isEdit ? 'Modifier le cours' : 'Créer un nouveau cours',
                         style: const TextStyle(
-                          fontSize: 22,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF0F172A),
                         ),
@@ -354,7 +1204,9 @@ class CoursesView extends GetView<CourseController> {
                   const SizedBox(height: 6),
                   const Text(
                     'Remplissez les détails ci-dessous pour enregistrer le cours.',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                    style: TextStyle(
+                      color: Color(0xFF6B7280),
+                    ),
                   ),
                   const SizedBox(height: 14),
                   const Text('Titre du cours', style: _LabelStyle()),
@@ -527,7 +1379,6 @@ class CoursesView extends GetView<CourseController> {
                         child: Text(
                           isEdit ? 'Mettre à jour' : 'Créer le cours',
                           style: const TextStyle(
-                            fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -565,7 +1416,9 @@ class CoursesView extends GetView<CourseController> {
   InputDecoration _dialogInputDecoration(String? hintText) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+      hintStyle: const TextStyle(
+        color: Color(0xFF9CA3AF),
+      ),
       filled: true,
       fillColor: const Color(0xFFF8FAFC),
       isDense: true,
@@ -593,6 +1446,53 @@ class CoursesView extends GetView<CourseController> {
   }
 }
 
+class _CardNumberTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final trimmed = digits.length > 16 ? digits.substring(0, 16) : digits;
+
+    final buffer = StringBuffer();
+    for (var index = 0; index < trimmed.length; index++) {
+      buffer.write(trimmed[index]);
+      final isGroupBreak = (index + 1) % 4 == 0 && index + 1 != trimmed.length;
+      if (isGroupBreak) {
+        buffer.write(' ');
+      }
+    }
+
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+class _ExpiryDateTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final trimmed = digits.length > 4 ? digits.substring(0, 4) : digits;
+
+    var formatted = trimmed;
+    if (trimmed.length > 2) {
+      formatted = '${trimmed.substring(0, 2)}/${trimmed.substring(2)}';
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
 class _HeaderCell extends StatelessWidget {
   final String label;
   const _HeaderCell(this.label);
@@ -604,7 +1504,6 @@ class _HeaderCell extends StatelessWidget {
       style: const TextStyle(
         fontWeight: FontWeight.w700,
         color: Color(0xFF0F172A),
-        fontSize: 13,
       ),
     );
   }
@@ -613,7 +1512,6 @@ class _HeaderCell extends StatelessWidget {
 class _LabelStyle extends TextStyle {
   const _LabelStyle()
       : super(
-          fontSize: 13,
           fontWeight: FontWeight.w600,
           color: const Color(0xFF111827),
         );

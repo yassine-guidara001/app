@@ -1,33 +1,377 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_getx_app/app/data/models/course_model.dart';
 import 'package:flutter_getx_app/app/data/models/training_session_model.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/training_sessions_controller.dart';
 import 'package:get/get.dart';
 
 class TrainingSessionsPage extends GetView<TrainingSessionsController> {
   const TrainingSessionsPage({super.key});
 
+  static const int _studentSessionsMenuIndex = 14;
   static const Color _bg = Color(0xFFF1F5F9);
   static const Color _border = Color(0xFFE2E8F0);
   static const Color _textMuted = Color(0xFF64748B);
   static const Color _primary = Color(0xFF3B5BDB);
 
+  HomeController get _homeController => Get.find<HomeController>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 16),
-            Expanded(child: _buildTable()),
-          ],
+      body: Obx(
+        () {
+          final isStudentMode =
+              _homeController.selectedMenu.value == _studentSessionsMenuIndex;
+
+          if (isStudentMode) {
+            return _buildStudentSessionsView();
+          }
+
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context),
+                const SizedBox(height: 16),
+                Expanded(child: _buildTable()),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStudentSessionsView() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.event_note_outlined,
+                  color: Color(0xFF0B6BFF), size: 28),
+              SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sessions de formation',
+                    style: TextStyle(
+                      height: 1,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Retrouvez ici toutes les sessions de formation disponibles et vos inscriptions.',
+                    style: TextStyle(color: _textMuted),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildStudentTabs(),
+          const SizedBox(height: 14),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final isMySessions = controller.studentTabIndex.value == 1;
+              final rows = isMySessions
+                  ? controller.studentMySessions
+                  : controller.studentAvailableSessions;
+
+              if (rows.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _border),
+                  ),
+                  child: Text(
+                    isMySessions
+                        ? 'Aucune session inscrite'
+                        : 'Aucune session disponible',
+                    style: const TextStyle(color: Color(0xFF94A3B8)),
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                itemCount: rows.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (_, index) {
+                  final session = rows[index];
+                  return _buildStudentSessionCard(
+                    session,
+                    isMySession: isMySessions,
+                  );
+                },
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudentTabs() {
+    return Obx(() {
+      final selectedTab = controller.studentTabIndex.value;
+
+      return Row(
+        children: [
+          Expanded(
+            child: _studentTabButton(
+              label: 'Sessions disponibles',
+              selected: selectedTab == 0,
+              onTap: () => controller.studentTabIndex.value = 0,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _studentTabButton(
+              label: 'Mes sessions',
+              selected: selectedTab == 1,
+              onTap: () => controller.studentTabIndex.value = 1,
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _studentTabButton({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        height: 30,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : const Color(0xFFF5F7FB),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _border),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: const Color(0xFF111827),
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
         ),
       ),
     );
+  }
+
+  Widget _buildStudentSessionCard(
+    TrainingSession session, {
+    required bool isMySession,
+  }) {
+    final participantText =
+        '${session.participants.length} / ${session.maxParticipants} participants';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      session.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      session.courseLabel,
+                      style: const TextStyle(color: Color(0xFF4B5563)),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0B6BFF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  session.type.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              const Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: Color(0xFF6B7280),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _formatStudentDate(session.startDate),
+                style: const TextStyle(color: Color(0xFF6B7280)),
+              ),
+              const Spacer(),
+              const Icon(
+                Icons.access_time,
+                size: 14,
+                color: Color(0xFF6B7280),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _formatStudentTimeRange(session.startDate, session.endDate),
+                style: const TextStyle(color: Color(0xFF6B7280)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(
+                Icons.people_outline,
+                size: 14,
+                color: Color(0xFF6B7280),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                participantText,
+                style: const TextStyle(color: Color(0xFF6B7280)),
+              ),
+            ],
+          ),
+          if (isMySession &&
+              (session.meetingLink?.trim().isNotEmpty ?? false)) ...[
+            const SizedBox(height: 10),
+            const Row(
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: Color(0xFF0B6BFF),
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'Lien de la réunion',
+                  style: TextStyle(
+                    color: Color(0xFF0B6BFF),
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: SizedBox(
+              height: 36,
+              child: ElevatedButton(
+                onPressed: controller.isSaving.value
+                    ? null
+                    : () {
+                        if (isMySession) {
+                          controller.leaveSession(session);
+                          return;
+                        }
+                        controller.enrollInSession(session);
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      isMySession ? const Color(0xFFEF4444) : _primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+                child: Text(isMySession ? 'Se désinscrire' : 'S\'inscrire'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatStudentDate(DateTime? value) {
+    if (value == null) return '-';
+
+    const weekdays = <String>[
+      'lundi',
+      'mardi',
+      'mercredi',
+      'jeudi',
+      'vendredi',
+      'samedi',
+      'dimanche',
+    ];
+    const months = <String>[
+      'janvier',
+      'février',
+      'mars',
+      'avril',
+      'mai',
+      'juin',
+      'juillet',
+      'août',
+      'septembre',
+      'octobre',
+      'novembre',
+      'décembre',
+    ];
+
+    final weekday = weekdays[value.weekday - 1];
+    final month = months[value.month - 1];
+
+    return '$weekday ${value.day} $month ${value.year}';
+  }
+
+  String _formatStudentTimeRange(DateTime? start, DateTime? end) {
+    String hhmm(DateTime? value) {
+      if (value == null) return '--:--';
+      final h = value.hour.toString().padLeft(2, '0');
+      final m = value.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    }
+
+    return '${hhmm(start)} - ${hhmm(end)}';
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -44,7 +388,6 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
                 Text(
                   'Mes Sessions',
                   style: TextStyle(
-                    fontSize: 44,
                     height: 1.0,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF0F172A),
@@ -53,7 +396,9 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
                 SizedBox(height: 4),
                 Text(
                   'Planifiez et gérez vos sessions de formation',
-                  style: TextStyle(color: _textMuted, fontSize: 20),
+                  style: TextStyle(
+                    color: _textMuted,
+                  ),
                 ),
               ],
             ),
@@ -149,28 +494,28 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
                             flex: 2,
                             child: Text(
                               session.title,
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: Text(
                               session.courseLabel,
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: Text(
                               _typeText(session.type),
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(),
                             ),
                           ),
                           Expanded(
                             flex: 3,
                             child: Text(
                               _formatDateTime(session.startDate),
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(),
                             ),
                           ),
                           Expanded(
@@ -178,7 +523,6 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
                             child: Text(
                               _statusText(session.status),
                               style: const TextStyle(
-                                fontSize: 14,
                                 color: Color(0xFFEF4444),
                               ),
                             ),
@@ -189,7 +533,7 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
                               alignment: Alignment.centerRight,
                               child: Text(
                                 '${session.participants.length} / ${session.maxParticipants}',
-                                style: const TextStyle(fontSize: 14),
+                                style: const TextStyle(),
                               ),
                             ),
                           ),
@@ -262,7 +606,6 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
                               ? 'Nouvelle Session de Formation'
                               : 'Modifier la Session',
                           style: const TextStyle(
-                            fontSize: 28,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF111827),
                           ),
@@ -277,7 +620,9 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
                     const SizedBox(height: 2),
                     const Text(
                       'Planifiez une nouvelle session pour vos étudiants.',
-                      style: TextStyle(color: _textMuted, fontSize: 14),
+                      style: TextStyle(
+                        color: _textMuted,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     const Text('Titre de la session'),
@@ -536,7 +881,6 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
           value == null ? 'jj / mm / aaaa --:--' : _formatDateTime(value),
           style: TextStyle(
             color: value == null ? const Color(0xFF9CA3AF) : Colors.black87,
-            fontSize: 13,
           ),
         ),
       ),
@@ -546,7 +890,9 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
   InputDecoration _dialogInputDecoration(String? hintText) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+      hintStyle: const TextStyle(
+        color: Color(0xFF9CA3AF),
+      ),
       filled: true,
       fillColor: Colors.white,
       isDense: true,
@@ -601,7 +947,6 @@ class _HeaderCell extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        fontSize: 14,
         fontWeight: FontWeight.w700,
         color: Color(0xFF0F172A),
       ),

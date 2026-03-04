@@ -58,7 +58,6 @@ class SpacesView extends GetView<SpaceController> {
               Text(
                 'Gestion des espaces',
                 style: TextStyle(
-                  fontSize: 38,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF0F172A),
                   height: 1.05,
@@ -67,7 +66,7 @@ class SpacesView extends GetView<SpaceController> {
               SizedBox(height: 4),
               Text(
                 'Gerez vos espaces de coworking',
-                style: TextStyle(color: Color(0xFF475569), fontSize: 21),
+                style: TextStyle(color: Color(0xFF475569), ),
               ),
             ],
           ),
@@ -104,7 +103,7 @@ class SpacesView extends GetView<SpaceController> {
             decoration: InputDecoration(
               hintText: 'Rechercher un espace...',
               hintStyle:
-                  const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                  const TextStyle(color: Color(0xFF94A3B8), ),
               prefixIcon:
                   const Icon(Icons.search, color: Color(0xFF64748B), size: 18),
               filled: true,
@@ -242,32 +241,27 @@ class SpacesView extends GetView<SpaceController> {
               flex: 3,
               child: Text('ESPACE',
                   style: TextStyle(
-                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF64748B)))),
           Expanded(
               flex: 2,
               child: Text('TYPE',
                   style: TextStyle(
-                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF64748B)))),
           Expanded(
               child: Text('CAPACITÉ',
                   style: TextStyle(
-                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF64748B)))),
           Expanded(
               child: Text('TARIF/H',
                   style: TextStyle(
-                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF64748B)))),
           Expanded(
               child: Text('STATUT',
                   style: TextStyle(
-                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF64748B)))),
           Expanded(
@@ -275,7 +269,6 @@ class SpacesView extends GetView<SpaceController> {
                   alignment: Alignment.centerRight,
                   child: Text('ACTIONS',
                       style: TextStyle(
-                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF64748B))))),
         ],
@@ -319,7 +312,7 @@ class SpacesView extends GetView<SpaceController> {
                       child: Text(
                         locationLine,
                         style: const TextStyle(
-                            color: Colors.black54, fontSize: 12),
+                            color: Colors.black54, ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -329,7 +322,7 @@ class SpacesView extends GetView<SpaceController> {
                   const SizedBox(height: 2),
                   Text(
                     areaLabel,
-                    style: const TextStyle(color: Colors.black54, fontSize: 12),
+                    style: const TextStyle(color: Colors.black54, ),
                   ),
                 ],
               ],
@@ -346,7 +339,7 @@ class SpacesView extends GetView<SpaceController> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
-                child: Text(typeLabel, style: const TextStyle(fontSize: 12)),
+                child: Text(typeLabel, style: const TextStyle()),
               ),
             ),
           ),

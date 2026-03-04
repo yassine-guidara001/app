@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_getx_app/app/core/service/auth_service.dart';
 import 'package:flutter_getx_app/app/data/models/course_model.dart';
 import 'package:flutter_getx_app/app/data/models/training_session_model.dart';
 import 'package:flutter_getx_app/app/data/services/courses_api.dart';
@@ -8,18 +9,30 @@ import 'package:get/get.dart';
 class TrainingSessionsController extends GetxController {
   final TrainingSessionsApi _api;
   final CoursesApi _coursesApi;
+  final AuthService _authService;
 
   TrainingSessionsController({
     TrainingSessionsApi? api,
     CoursesApi? coursesApi,
+    AuthService? authService,
   })  : _api = api ?? TrainingSessionsApi(),
-        _coursesApi = coursesApi ?? CoursesApi();
+        _coursesApi = coursesApi ?? CoursesApi(),
+        _authService = authService ?? Get.find<AuthService>();
 
   final RxList<TrainingSession> sessions = <TrainingSession>[].obs;
   final RxList<Course> courses = <Course>[].obs;
   final RxBool isLoading = false.obs;
   final RxBool isSaving = false.obs;
   final RxString searchQuery = ''.obs;
+  final RxInt studentTabIndex = 0.obs;
+
+  int? get currentUserId => _authService.currentUserId;
+
+  List<TrainingSession> get studentAvailableSessions =>
+      sessions.where((session) => !_isCurrentUserParticipant(session)).toList();
+
+  List<TrainingSession> get studentMySessions =>
+      sessions.where(_isCurrentUserParticipant).toList();
 
   List<TrainingSession> get filteredSessions {
     final q = searchQuery.value.trim().toLowerCase();
@@ -54,6 +67,96 @@ class TrainingSessionsController extends GetxController {
       Get.snackbar('Erreur', e.toString().replaceFirst('Exception: ', ''));
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> enrollInSession(TrainingSession session) async {
+    final userId = currentUserId;
+    if (userId == null) {
+      Get.snackbar('Erreur', 'Utilisateur non connecté');
+      return;
+    }
+
+    if (_isCurrentUserParticipant(session)) {
+      studentTabIndex.value = 1;
+      return;
+    }
+
+    if (session.participants.length >= session.maxParticipants) {
+      Get.snackbar('Information', 'Session complète');
+      return;
+    }
+
+    isSaving.value = true;
+    try {
+      final attendeeIds = <int>{
+        ...session.participants.map((item) => item.id),
+        userId,
+      }.toList();
+
+      final identifier = session.documentId.trim().isNotEmpty
+          ? session.documentId
+          : session.id;
+
+      final updated = await _api.updateSessionAttendees(
+        identifier,
+        attendeeIds: attendeeIds,
+      );
+
+      _replaceSession(_resolveCourseLabelForSession(
+        updated,
+        fallbackLabel: session.courseLabel,
+        fallbackCourseId: session.courseAssociated,
+      ));
+
+      studentTabIndex.value = 1;
+      Get.snackbar('Succès', 'Inscription effectuée');
+    } catch (e) {
+      Get.snackbar('Erreur', e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
+  Future<void> leaveSession(TrainingSession session) async {
+    final userId = currentUserId;
+    if (userId == null) {
+      Get.snackbar('Erreur', 'Utilisateur non connecté');
+      return;
+    }
+
+    if (!_isCurrentUserParticipant(session)) {
+      return;
+    }
+
+    isSaving.value = true;
+    try {
+      final attendeeIds = session.participants
+          .map((item) => item.id)
+          .where((id) => id != userId)
+          .toSet()
+          .toList();
+
+      final identifier = session.documentId.trim().isNotEmpty
+          ? session.documentId
+          : session.id;
+
+      final updated = await _api.updateSessionAttendees(
+        identifier,
+        attendeeIds: attendeeIds,
+      );
+
+      _replaceSession(_resolveCourseLabelForSession(
+        updated,
+        fallbackLabel: session.courseLabel,
+        fallbackCourseId: session.courseAssociated,
+      ));
+
+      Get.snackbar('Succès', 'Désinscription effectuée');
+    } catch (e) {
+      Get.snackbar('Erreur', e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      isSaving.value = false;
     }
   }
 
@@ -165,5 +268,20 @@ class TrainingSessionsController extends GetxController {
       courseAssociated: currentCourseId,
       courseLabel: resolvedLabel,
     );
+  }
+
+  bool _isCurrentUserParticipant(TrainingSession session) {
+    final userId = currentUserId;
+    if (userId == null) return false;
+    return session.participants.any((participant) => participant.id == userId);
+  }
+
+  void _replaceSession(TrainingSession updated) {
+    final index = sessions.indexWhere((item) => item.id == updated.id);
+    if (index >= 0) {
+      sessions[index] = updated;
+      return;
+    }
+    sessions.insert(0, updated);
   }
 }

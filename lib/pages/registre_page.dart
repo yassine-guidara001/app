@@ -171,7 +171,6 @@ class RegisterPage extends StatelessWidget {
                                       'S',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 24,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -181,7 +180,6 @@ class RegisterPage extends StatelessWidget {
                                 const Text(
                                   "SUNSPACE",
                                   style: TextStyle(
-                                    fontSize: 22,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black87,
                                   ),
@@ -191,7 +189,6 @@ class RegisterPage extends StatelessWidget {
                                 const Text(
                                   "Créer votre compte",
                                   style: TextStyle(
-                                    fontSize: 14,
                                     color: Colors.grey,
                                     fontWeight: FontWeight.normal,
                                   ),
@@ -203,7 +200,6 @@ class RegisterPage extends StatelessWidget {
                                   child: Text(
                                     "Nom d'utilisateur",
                                     style: TextStyle(
-                                      fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black,
                                     ),
@@ -239,7 +235,6 @@ class RegisterPage extends StatelessWidget {
                                   child: Text(
                                     "Adresse email",
                                     style: TextStyle(
-                                      fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black,
                                     ),
@@ -276,7 +271,6 @@ class RegisterPage extends StatelessWidget {
                                   child: Text(
                                     "Mot de passe",
                                     style: TextStyle(
-                                      fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black,
                                     ),
@@ -313,7 +307,6 @@ class RegisterPage extends StatelessWidget {
                                   child: Text(
                                     "Confirmer le mot de passe",
                                     style: TextStyle(
-                                      fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black,
                                     ),
@@ -352,7 +345,7 @@ class RegisterPage extends StatelessWidget {
                                         .acceptTerms.value = value ?? false,
                                     title: const Text(
                                       "J'accepte les conditions d'utilisation et la politique de confidentialité",
-                                      style: TextStyle(fontSize: 12),
+                                      style: TextStyle(),
                                     ),
                                     controlAffinity:
                                         ListTileControlAffinity.leading,
@@ -387,7 +380,6 @@ class RegisterPage extends StatelessWidget {
                                             child: const Text(
                                               "S'inscrire →",
                                               style: TextStyle(
-                                                fontSize: 16,
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -411,8 +403,7 @@ class RegisterPage extends StatelessWidget {
                                         "Ou",
                                         style: TextStyle(
                                           color: Colors.grey.shade600,
-                                          fontSize: 12,
-                                        ),
+                                          ),
                                       ),
                                     ),
                                     Expanded(
@@ -433,14 +424,12 @@ class RegisterPage extends StatelessWidget {
                                           text: "Déjà inscrit ? ",
                                           style: TextStyle(
                                             color: Colors.grey,
-                                            fontSize: 14,
-                                          ),
+                                            ),
                                         ),
                                         TextSpan(
                                           text: "Se connecter",
                                           style: TextStyle(
                                             color: Color(0xFF2563EB),
-                                            fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -508,7 +497,6 @@ class RegisterPage extends StatelessWidget {
         Text(
           text,
           style: const TextStyle(
-            fontSize: 14,
             color: Colors.black87,
             fontWeight: FontWeight.w500,
           ),
