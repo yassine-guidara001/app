@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_getx_app/app/data/models/course_model.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/course_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/student_course_access_page.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
 import 'package:get/get.dart';
 
@@ -31,7 +32,7 @@ class CoursesView extends GetView<CourseController> {
               final isStudentCatalog = selectedMenu == _studentCatalogMenuIndex;
 
               if (isStudentMyCourses) {
-                return _buildStudentMyCoursesEmptyState();
+                return _buildStudentMyCoursesView();
               }
 
               if (isStudentCatalog) {
@@ -65,7 +66,7 @@ class CoursesView extends GetView<CourseController> {
     );
   }
 
-  Widget _buildStudentMyCoursesEmptyState() {
+  Widget _buildStudentMyCoursesView() {
     return Column(
       children: [
         _buildTopBar(),
@@ -98,84 +99,213 @@ class CoursesView extends GetView<CourseController> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFD6DEE8)),
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 68,
-                              height: 68,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFFDCEAFE),
-                              ),
-                              child: const Icon(
-                                Icons.menu_book_rounded,
-                                color: Color(0xFF2563EB),
-                                size: 38,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              "Vous n'avez pas encore de cours",
-                              style: TextStyle(
-                                color: Color(0xFF111827),
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Text(
-                              'Explorez notre catalogue pour trouver la formation\nqui vous convient et commencez à apprendre dès\naujourd\'hui.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Color(0xFF6B7280),
-                                height: 1.5,
-                              ),
-                            ),
-                            const SizedBox(height: 22),
-                            SizedBox(
-                              height: 40,
-                              child: ElevatedButton(
-                                onPressed: _openStudentCatalog,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2563EB),
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 18),
-                                ),
-                                child: const Text(
-                                  'Voir le catalogue',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildStudentMyCoursesContent()),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStudentMyCoursesContent() {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final enrolledCourses = controller.studentMyCourses;
+      if (enrolledCourses.isEmpty) {
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFD6DEE8)),
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 68,
+                    height: 68,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFFDCEAFE),
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      color: Color(0xFF2563EB),
+                      size: 38,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Vous n'avez pas encore de cours",
+                    style: TextStyle(
+                      color: Color(0xFF111827),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Explorez notre catalogue pour trouver la formation\nqui vous convient et commencez à apprendre dès\naujourd\'hui.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF6B7280),
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    height: 40,
+                    child: ElevatedButton(
+                      onPressed: _openStudentCatalog,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                      ),
+                      child: const Text(
+                        'Voir le catalogue',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      return SingleChildScrollView(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 980;
+            final cardWidth =
+                isWide ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth;
+
+            return Wrap(
+              spacing: 24,
+              runSpacing: 20,
+              children: enrolledCourses
+                  .map((course) => SizedBox(
+                        width: cardWidth,
+                        child: _buildStudentMyCourseCard(course),
+                      ))
+                  .toList(),
+            );
+          },
+        ),
+      );
+    });
+  }
+
+  Widget _buildStudentMyCourseCard(Course course) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD6DEE8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCEAFE),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Text(
+              course.level.toUpperCase(),
+              style: const TextStyle(
+                color: Color(0xFF2563EB),
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            course.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF111827),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Row(
+            children: [
+              Icon(Icons.access_time, size: 14, color: Color(0xFF9CA3AF)),
+              SizedBox(width: 4),
+              Text(
+                '0h',
+                style: TextStyle(color: Color(0xFF6B7280)),
+              ),
+              SizedBox(width: 10),
+              Icon(Icons.play_circle_outline,
+                  size: 14, color: Color(0xFF9CA3AF)),
+              SizedBox(width: 4),
+              Text(
+                '0 Modules',
+                style: TextStyle(color: Color(0xFF6B7280)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Row(
+            children: [
+              Text(
+                'Progression',
+                style: TextStyle(color: Color(0xFF6B7280)),
+              ),
+              Spacer(),
+              Text(
+                '0%',
+                style: TextStyle(color: Color(0xFF6B7280)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFD6DEE8)),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 32,
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Get.to(() => StudentCourseAccessPage(course: course));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Continuer',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -206,7 +336,7 @@ class CoursesView extends GetView<CourseController> {
                 const SizedBox(height: 16),
                 Obx(
                   () => Text(
-                    '${controller.filteredCourses.length} cours disponibles',
+                    '${controller.studentCatalogCourses.length} cours disponibles',
                     style: const TextStyle(
                       color: Color(0xFF475569),
                       fontWeight: FontWeight.w500,
@@ -285,7 +415,7 @@ class CoursesView extends GetView<CourseController> {
         );
       }
 
-      final courses = controller.filteredCourses;
+      final courses = controller.studentCatalogCourses;
       if (courses.isEmpty) {
         return Container(
           width: double.infinity,
@@ -330,6 +460,8 @@ class CoursesView extends GetView<CourseController> {
   }
 
   Widget _buildCatalogCard(BuildContext context, Course course) {
+    final isEnrolled = controller.isEnrolledIn(course);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
@@ -359,9 +491,17 @@ class CoursesView extends GetView<CourseController> {
           SizedBox(
             height: 32,
             child: ElevatedButton(
-              onPressed: () => _showEnrollmentPaymentDialog(context, course),
+              onPressed: () {
+                if (isEnrolled) {
+                  Get.to(() => StudentCourseAccessPage(course: course));
+                  return;
+                }
+                _showEnrollmentPaymentDialog(context, course);
+              },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2563EB),
+                backgroundColor: isEnrolled
+                    ? const Color(0xFF22C55E)
+                    : const Color(0xFF2563EB),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -370,7 +510,7 @@ class CoursesView extends GetView<CourseController> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
               ),
               child: Text(
-                _buildEnrollmentLabel(course),
+                _buildCatalogActionLabel(course, isEnrolled: isEnrolled),
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                 ),
@@ -383,7 +523,11 @@ class CoursesView extends GetView<CourseController> {
     );
   }
 
-  String _buildEnrollmentLabel(Course course) {
+  String _buildCatalogActionLabel(Course course, {required bool isEnrolled}) {
+    if (isEnrolled) {
+      return 'Accéder';
+    }
+
     if (course.price <= 0) {
       return 'S\'inscrire - Gratuit';
     }
@@ -821,27 +965,41 @@ class CoursesView extends GetView<CourseController> {
                       SizedBox(
                         width: 215,
                         height: 40,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop();
-                            Get.snackbar(
-                              'Paiement validé',
-                              'Inscription confirmée pour ${course.title}',
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF74A7F2),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                        child: Obx(
+                          () => ElevatedButton(
+                            onPressed: controller.isProcessingEnrollment.value
+                                ? null
+                                : () async {
+                                    Navigator.of(dialogContext).pop();
+                                    final success = await controller
+                                        .enrollInCourseWithPayment(
+                                      course,
+                                    );
+                                    if (!success) return;
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF74A7F2),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            payButtonLabel,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                            ),
+                            child: controller.isProcessingEnrollment.value
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    payButtonLabel,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

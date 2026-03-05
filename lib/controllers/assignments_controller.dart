@@ -1,12 +1,17 @@
 import 'package:flutter_getx_app/app/data/models/course_model.dart';
 import 'package:flutter_getx_app/app/data/services/courses_api.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
 import 'package:flutter_getx_app/models/assignment_model.dart';
 import 'package:flutter_getx_app/services/assignments_api.dart';
 import 'package:get/get.dart';
 
 class AssignmentsController extends GetxController {
+  static const int _teacherAssignmentsMenuIndex = 8;
+  static const int _studentAssignmentsMenuIndex = 11;
+
   final AssignmentsApi _api;
   final CoursesApi _coursesApi;
+  Worker? _menuWorker;
 
   AssignmentsController({AssignmentsApi? api, CoursesApi? coursesApi})
       : _api = api ?? AssignmentsApi(),
@@ -22,14 +27,22 @@ class AssignmentsController extends GetxController {
   void onInit() {
     super.onInit();
     fetchAssignments();
+    _watchAssignmentMenus();
   }
 
-  Future<void> fetchAssignments() async {
+  @override
+  void onClose() {
+    _menuWorker?.dispose();
+    super.onClose();
+  }
+
+  Future<void> fetchAssignments({bool? teacherMode}) async {
     isLoading.value = true;
     errorMessage.value = '';
 
     try {
-      final result = await _api.getAssignments();
+      final isTeacherMode = teacherMode ?? _isTeacherAssignmentsMode();
+      final result = await _api.getAssignments(onlyInstructor: isTeacherMode);
       assignments.assignAll(result.map(_resolveCourseName).toList());
     } catch (e) {
       final message = _normalizeError(e);
@@ -243,5 +256,32 @@ class AssignmentsController extends GetxController {
     if (raw.contains('Erreur serveur')) return 'Erreur serveur';
 
     return raw.isEmpty ? 'Erreur inconnue' : raw;
+  }
+
+  bool _isTeacherAssignmentsMode() {
+    if (!Get.isRegistered<HomeController>()) {
+      return false;
+    }
+
+    final menu = Get.find<HomeController>().selectedMenu.value;
+    return menu == _teacherAssignmentsMenuIndex;
+  }
+
+  void _watchAssignmentMenus() {
+    if (!Get.isRegistered<HomeController>()) {
+      return;
+    }
+
+    final home = Get.find<HomeController>();
+
+    _menuWorker = ever<int>(home.selectedMenu, (menu) {
+      if (menu == _teacherAssignmentsMenuIndex) {
+        fetchAssignments(teacherMode: true);
+      }
+
+      if (menu == _studentAssignmentsMenuIndex) {
+        fetchAssignments(teacherMode: false);
+      }
+    });
   }
 }

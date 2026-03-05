@@ -90,34 +90,43 @@ class TrainingSessionsPage extends GetView<TrainingSessionsController> {
                   ? controller.studentMySessions
                   : controller.studentAvailableSessions;
 
-              if (rows.isEmpty) {
-                return Container(
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _border),
-                  ),
-                  child: Text(
-                    isMySessions
-                        ? 'Aucune session inscrite'
-                        : 'Aucune session disponible',
-                    style: const TextStyle(color: Color(0xFF94A3B8)),
-                  ),
-                );
-              }
-
-              return ListView.separated(
-                itemCount: rows.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (_, index) {
-                  final session = rows[index];
-                  return _buildStudentSessionCard(
-                    session,
-                    isMySession: isMySessions,
-                  );
-                },
+              return RefreshIndicator(
+                onRefresh: () => controller.refreshSessionsFromServer(),
+                child: rows.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          const SizedBox(height: 120),
+                          Container(
+                            height: 180,
+                            width: double.infinity,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: _border),
+                            ),
+                            child: Text(
+                              isMySessions
+                                  ? 'Aucune session inscrite'
+                                  : 'Aucune session disponible',
+                              style: const TextStyle(color: Color(0xFF94A3B8)),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: rows.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (_, index) {
+                          final session = rows[index];
+                          return _buildStudentSessionCard(
+                            session,
+                            isMySession: isMySessions,
+                          );
+                        },
+                      ),
               );
             }),
           ),

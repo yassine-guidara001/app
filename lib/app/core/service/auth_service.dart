@@ -7,6 +7,11 @@ import 'package:http/http.dart' as http;
 
 class AuthService extends GetxService {
   static const String _baseApiUrl = 'http://193.111.250.244:3046/api';
+  static const Duration _profileSyncTtl = Duration(seconds: 20);
+
+  DateTime? _lastProfileSyncAt;
+  Map<String, dynamic>? _cachedProfile;
+  Future<Map<String, dynamic>>? _profileSyncFuture;
 
   final StorageService _storage = Get.find<StorageService>();
 
@@ -45,6 +50,63 @@ class AuthService extends GetxService {
     if (rawId is int) return rawId;
     if (rawId is num) return rawId.toInt();
     return int.tryParse(rawId?.toString() ?? '');
+  }
+
+  Future<Map<String, dynamic>?> syncCurrentUserProfile({
+    bool force = false,
+  }) async {
+    if (!isLoggedIn) {
+      return null;
+    }
+
+    final now = DateTime.now();
+    if (!force &&
+        _cachedProfile != null &&
+        _lastProfileSyncAt != null &&
+        now.difference(_lastProfileSyncAt!) < _profileSyncTtl) {
+      return Map<String, dynamic>.from(_cachedProfile!);
+    }
+
+    if (!force && _profileSyncFuture != null) {
+      return Map<String, dynamic>.from(await _profileSyncFuture!);
+    }
+
+    final syncFuture = _fetchCurrentUserProfile();
+    _profileSyncFuture = syncFuture;
+
+    try {
+      final profile = await syncFuture;
+      _cachedProfile = Map<String, dynamic>.from(profile);
+      _lastProfileSyncAt = DateTime.now();
+      return Map<String, dynamic>.from(profile);
+    } finally {
+      if (identical(_profileSyncFuture, syncFuture)) {
+        _profileSyncFuture = null;
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> _fetchCurrentUserProfile() async {
+    final response = await http.get(
+      Uri.parse('$_baseApiUrl/users/me?populate=*'),
+      headers: authHeaders,
+    );
+
+    final decoded = _decodeBody(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(_statusMessage(response.statusCode, decoded));
+    }
+
+    final rawProfile = decoded['data'] ?? decoded;
+    if (rawProfile is! Map) {
+      throw Exception('Profil utilisateur invalide');
+    }
+
+    final profile = Map<String, dynamic>.from(rawProfile);
+    await _storage.saveUserData(profile);
+    await _storage.write('user_data', profile);
+    await _storage.write('user', profile);
+    return profile;
   }
 
   Future<String> login({

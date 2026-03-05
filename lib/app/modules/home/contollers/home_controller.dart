@@ -1,14 +1,43 @@
+import 'package:flutter_getx_app/app/core/service/auth_service.dart';
 import 'package:get/get.dart';
 
 class HomeController extends GetxController {
   /// ===============================
   /// 🔵 SIDEBAR MENU
   /// ===============================
+  static const Set<int> _profileSyncMenuIndexes = <int>{
+    5, // Enseignant - Formations
+    6, // Enseignant - Sessions
+    7, // Enseignant - Étudiants
+    8, // Enseignant - Devoirs
+    9, // Enseignant - Communication
+    10, // Étudiant - Mes cours
+    11, // Étudiant - Mes devoirs
+    12, // Étudiant - Catalogue Cours
+    13, // Étudiant - Espaces d'étude
+    14, // Étudiant - Sessions
+  };
+
+  final AuthService _authService = Get.find<AuthService>();
+
   final selectedMenu = 3.obs; // utilisateurs selected par défaut
 
   void changeMenu(int index, String route) {
     selectedMenu.value = index;
+
+    if (_profileSyncMenuIndexes.contains(index)) {
+      _syncCurrentUserForSidebarSection();
+    }
+
     Get.toNamed(route);
+  }
+
+  Future<void> _syncCurrentUserForSidebarSection() async {
+    try {
+      await _authService.syncCurrentUserProfile();
+    } catch (_) {
+      // Ignore sync errors here so sidebar navigation stays responsive.
+    }
   }
 
   /// ===============================

@@ -18,7 +18,7 @@ class AssignmentsApi {
   AssignmentsApi({AuthService? authService})
       : _authService = authService ?? Get.find<AuthService>();
 
-  Future<List<Assignment>> getAssignments() async {
+  Future<List<Assignment>> getAssignments({bool onlyInstructor = false}) async {
     final userId = _authService.currentUserId;
 
     final populateQuery = [
@@ -27,60 +27,237 @@ class AssignmentsApi {
       'populate=attachment',
     ].join('&');
 
-    final filteredUri = Uri.parse(
-      userId == null
-          ? '$_baseApiUrl/assignments?$populateQuery'
-          : '$_baseApiUrl/assignments?filters[course][instructor][id][\$eq]=$userId&$populateQuery',
-    );
+    // Pour les enseignants : filtrer par cours qu'ils enseignent
+    if (onlyInstructor) {
+      final filteredUri = userId == null
+          ? Uri.parse('$_baseApiUrl/assignments?$populateQuery')
+          : Uri.parse(
+              '$_baseApiUrl/assignments?filters[course][instructor][id][\$eq]=$userId&$populateQuery',
+            );
 
-    final fallbackUri = Uri.parse('$_baseApiUrl/assignments?$populateQuery');
+      final assignments = await _fetchAssignmentsCandidate(filteredUri);
+      if (assignments != null) {
+        return assignments;
+      }
+      return const <Assignment>[];
+    }
+
+    // Pour les étudiants : récupérer uniquement les devoirs des cours inscrits
+    final enrolledCourseIds = await _getStudentEnrolledCourseIds();
+
+    if (enrolledCourseIds.isEmpty) {
+      debugPrint(
+          '[AssignmentsAPI] Aucun cours inscrit trouvé pour l\'étudiant');
+      return const <Assignment>[];
+    }
+
+    final allAssignments = <Assignment>[];
+
+    // Récupérer les devoirs pour chaque cours inscrit
+    for (final courseId in enrolledCourseIds) {
+      final uri = Uri.parse(
+        '$_baseApiUrl/assignments?filters[course][id][\$eq]=$courseId&$populateQuery',
+      );
+
+      final assignments = await _fetchAssignmentsCandidate(uri);
+      if (assignments != null) {
+        allAssignments.addAll(assignments);
+      }
+    }
+
+    return _dedupeById(allAssignments);
+  }
+
+  Future<List<Assignment>> getAssignmentsForCourse({
+    int? courseId,
+    String? courseDocumentId,
+    bool onlyTodo = false,
+  }) async {
+    final populateQuery = [
+      'populate=course',
+      'populate=submissions',
+      'populate=attachment',
+    ].join('&');
+
+    final normalizedCourseDocumentId = courseDocumentId?.trim() ?? '';
 
     final candidateUris = <Uri>[
-      filteredUri,
-      if (filteredUri.toString() != fallbackUri.toString()) fallbackUri,
+      if (courseId != null && courseId > 0)
+        Uri.parse(
+          '$_baseApiUrl/assignments?filters[course][id][\$eq]=$courseId&$populateQuery',
+        ),
+      if (normalizedCourseDocumentId.isNotEmpty)
+        Uri.parse(
+          '$_baseApiUrl/assignments?filters[course][documentId][\$eq]=${Uri.encodeComponent(normalizedCourseDocumentId)}&$populateQuery',
+        ),
+      Uri.parse('$_baseApiUrl/assignments?$populateQuery'),
     ];
 
-    http.Response? lastResponse;
-
     for (final uri in candidateUris) {
-      debugPrint('[AssignmentsAPI] GET $uri');
+      final parsed = await _fetchAssignmentsCandidate(uri);
+      if (parsed == null) {
+        continue;
+      }
 
+      final filteredByCourse = parsed.where((assignment) {
+        if (courseId != null && courseId > 0 && assignment.courseId != null) {
+          if (assignment.courseId == courseId) {
+            return true;
+          }
+        }
+
+        if (normalizedCourseDocumentId.isNotEmpty) {
+          final assignmentDoc = assignment.courseDocumentId?.trim() ?? '';
+          if (assignmentDoc == normalizedCourseDocumentId) {
+            return true;
+          }
+        }
+
+        if (courseId == null && normalizedCourseDocumentId.isEmpty) {
+          return true;
+        }
+
+        return false;
+      }).toList();
+
+      if (!onlyTodo) {
+        return filteredByCourse;
+      }
+
+      final now = DateTime.now();
+      return filteredByCourse.where((assignment) {
+        // "A faire" only: hide expired assignments.
+        return !assignment.dueDate.isBefore(now);
+      }).toList();
+    }
+
+    return const <Assignment>[];
+  }
+
+  Future<List<Assignment>?> _fetchAssignmentsCandidate(Uri baseUri) async {
+    // Try paginated GET first to retrieve all assignments, then fall back.
+    final firstPageUri = _withPagination(baseUri, page: 1, pageSize: 100);
+
+    debugPrint('[AssignmentsAPI] GET $firstPageUri');
+    http.Response response = await http
+        .get(firstPageUri, headers: _authService.authHeaders)
+        .timeout(_requestTimeout);
+    _logResponse(response);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return _collectAllPages(baseUri, response);
+    }
+
+    if (response.statusCode == 400 ||
+        response.statusCode == 404 ||
+        response.statusCode == 422) {
+      if (firstPageUri.toString() != baseUri.toString()) {
+        debugPrint('[AssignmentsAPI] GET $baseUri');
+        response = await http
+            .get(baseUri, headers: _authService.authHeaders)
+            .timeout(_requestTimeout);
+        _logResponse(response);
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          return _collectAllPages(baseUri, response);
+        }
+
+        if (response.statusCode == 400 ||
+            response.statusCode == 404 ||
+            response.statusCode == 422) {
+          return null;
+        }
+      }
+
+      return null;
+    }
+
+    _throwIfError(response);
+    return null;
+  }
+
+  Future<List<Assignment>> _collectAllPages(
+    Uri baseUri,
+    http.Response firstResponse,
+  ) async {
+    final items = _parseAssignmentsList(firstResponse.body);
+    final pageInfo = _extractPaginationInfo(firstResponse.body);
+    if (pageInfo == null || pageInfo.pageCount <= pageInfo.page) {
+      return _dedupeById(items);
+    }
+
+    for (var page = pageInfo.page + 1; page <= pageInfo.pageCount; page++) {
+      final pageUri = _withPagination(
+        baseUri,
+        page: page,
+        pageSize: pageInfo.pageSize,
+      );
+
+      debugPrint('[AssignmentsAPI] GET $pageUri');
       final response = await http
-          .get(uri, headers: _authService.authHeaders)
+          .get(pageUri, headers: _authService.authHeaders)
           .timeout(_requestTimeout);
-
       _logResponse(response);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        final decoded = _decodeMap(response.body);
-        final data = decoded['data'];
-        if (data is List) {
-          return data
-              .whereType<Map>()
-              .map(
-                (item) => Assignment.fromJson(Map<String, dynamic>.from(item)),
-              )
-              .toList();
-        }
-        return const <Assignment>[];
+        items.addAll(_parseAssignmentsList(response.body));
+        continue;
       }
-
-      lastResponse = response;
 
       if (response.statusCode == 400 ||
           response.statusCode == 404 ||
           response.statusCode == 422) {
-        continue;
+        break;
       }
 
       _throwIfError(response);
     }
 
-    if (lastResponse != null) {
-      _throwIfError(lastResponse);
+    return _dedupeById(items);
+  }
+
+  Uri _withPagination(Uri uri, {required int page, int? pageSize}) {
+    final parts = <String>[];
+
+    if (uri.query.trim().isNotEmpty) {
+      parts.add(uri.query);
     }
 
-    return const <Assignment>[];
+    parts.add('pagination[page]=${Uri.encodeQueryComponent(page.toString())}');
+    if (pageSize != null && pageSize > 0) {
+      parts.add(
+        'pagination[pageSize]=${Uri.encodeQueryComponent(pageSize.toString())}',
+      );
+    }
+
+    return uri.replace(query: parts.join('&'));
+  }
+
+  _AssignmentsPagination? _extractPaginationInfo(String body) {
+    final decoded = _decodeMap(body);
+    final meta = decoded['meta'];
+    if (meta is! Map) return null;
+
+    final pagination = meta['pagination'];
+    if (pagination is! Map) return null;
+
+    final page = _toIntNullable(pagination['page']) ?? 1;
+    final pageCount = _toIntNullable(pagination['pageCount']) ?? 1;
+    final pageSize = _toIntNullable(pagination['pageSize']);
+
+    return _AssignmentsPagination(
+      page: page,
+      pageCount: pageCount,
+      pageSize: pageSize,
+    );
+  }
+
+  List<Assignment> _dedupeById(List<Assignment> items) {
+    final unique = <int, Assignment>{};
+    for (final item in items) {
+      unique[item.id] = item;
+    }
+    return unique.values.toList();
   }
 
   Future<Assignment> getAssignmentById(
@@ -398,6 +575,19 @@ class AssignmentsApi {
     return <String, dynamic>{};
   }
 
+  List<Assignment> _parseAssignmentsList(String body) {
+    final decoded = _decodeMap(body);
+    final data = decoded['data'];
+    if (data is! List) {
+      return const <Assignment>[];
+    }
+
+    return data
+        .whereType<Map>()
+        .map((item) => Assignment.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
   Uint8List? _extractFileBytes(dynamic file) {
     if (file is Map<String, dynamic>) {
       final dynamic bytes = file['bytes'];
@@ -431,4 +621,134 @@ class AssignmentsApi {
     if (value is num) return value.toInt();
     return int.tryParse(value.toString());
   }
+
+  /// Récupère les submissions pour un assignment spécifique
+  Future<List<Map<String, dynamic>>> getSubmissionsForAssignment(
+      int assignmentId) async {
+    final userId = _authService.currentUserId;
+
+    if (userId == null) {
+      debugPrint(
+          '[AssignmentsAPI] Aucun userId trouvé pour récupérer les submissions');
+      return const <Map<String, dynamic>>[];
+    }
+
+    final uri = Uri.parse(
+      '$_baseApiUrl/submissions?filters[assignment][id][\$eq]=$assignmentId&filters[student][id][\$eq]=$userId&populate=*',
+    );
+
+    debugPrint('[AssignmentsAPI] GET $uri');
+
+    try {
+      final response = await http
+          .get(uri, headers: _authService.authHeaders)
+          .timeout(_requestTimeout);
+
+      _logResponse(response);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = _decodeMap(response.body);
+        final data = decoded['data'];
+
+        if (data is List) {
+          return data.whereType<Map<String, dynamic>>().toList();
+        }
+      }
+
+      if (response.statusCode == 404) {
+        return const <Map<String, dynamic>>[];
+      }
+
+      _throwIfError(response);
+    } catch (e) {
+      debugPrint(
+          '[AssignmentsAPI] Erreur lors de la récupération des submissions: $e');
+    }
+
+    return const <Map<String, dynamic>>[];
+  }
+
+  /// Récupère les IDs des cours auxquels l'étudiant est inscrit via les enrollments
+  Future<List<int>> _getStudentEnrolledCourseIds() async {
+    final userId = _authService.currentUserId;
+
+    if (userId == null) {
+      debugPrint('[AssignmentsAPI] Aucun userId trouvé');
+      return const <int>[];
+    }
+
+    final candidateUris = <Uri>[
+      Uri.parse(
+        '$_baseApiUrl/enrollments?filters[student][id][\$eq]=$userId&populate=course',
+      ),
+    ];
+
+    for (final uri in candidateUris) {
+      debugPrint('[AssignmentsAPI] GET $uri');
+
+      try {
+        final response = await http
+            .get(uri, headers: _authService.authHeaders)
+            .timeout(_requestTimeout);
+
+        _logResponse(response);
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          final decoded = _decodeMap(response.body);
+          final data = decoded['data'];
+
+          if (data is List) {
+            final courseIds = <int>[];
+
+            for (final enrollment in data) {
+              if (enrollment is Map) {
+                // Essayer d'extraire l'ID du cours de différentes manières
+                final course = enrollment['course'];
+
+                if (course is Map) {
+                  final courseId = _toIntNullable(course['id']);
+                  if (courseId != null) {
+                    courseIds.add(courseId);
+                  }
+                } else if (course is int) {
+                  courseIds.add(course);
+                } else {
+                  final courseId = _toIntNullable(course);
+                  if (courseId != null) {
+                    courseIds.add(courseId);
+                  }
+                }
+              }
+            }
+
+            debugPrint('[AssignmentsAPI] Cours inscrits: $courseIds');
+            return courseIds;
+          }
+        }
+
+        if (response.statusCode == 404 || response.statusCode == 400) {
+          continue;
+        }
+
+        _throwIfError(response);
+      } catch (e) {
+        debugPrint(
+            '[AssignmentsAPI] Erreur lors de la récupération des enrollments: $e');
+      }
+    }
+
+    return const <int>[];
+  }
+}
+
+class _AssignmentsPagination {
+  final int page;
+  final int pageCount;
+  final int? pageSize;
+
+  const _AssignmentsPagination({
+    required this.page,
+    required this.pageCount,
+    this.pageSize,
+  });
 }

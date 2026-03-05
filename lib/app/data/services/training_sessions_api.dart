@@ -14,8 +14,9 @@ class TrainingSessionsApi {
       : _authService = authService ?? Get.find<AuthService>();
 
   Future<List<TrainingSession>> getSessions() async {
+    final ts = DateTime.now().millisecondsSinceEpoch;
     final endpoint =
-        '/training-sessions?populate=attendees&populate=course&sort=start_datetime:desc';
+        '/training-sessions?populate=attendees&populate=course&sort=start_datetime:desc&_ts=$ts';
     final response = await _get(endpoint);
     final decoded = _decodeMap(response.body);
     final data = decoded['data'];

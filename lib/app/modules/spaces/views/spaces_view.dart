@@ -66,7 +66,9 @@ class SpacesView extends GetView<SpaceController> {
               SizedBox(height: 4),
               Text(
                 'Gerez vos espaces de coworking',
-                style: TextStyle(color: Color(0xFF475569), ),
+                style: TextStyle(
+                  color: Color(0xFF475569),
+                ),
               ),
             ],
           ),
@@ -102,8 +104,9 @@ class SpacesView extends GetView<SpaceController> {
             onChanged: (value) => _searchQuery.value = value,
             decoration: InputDecoration(
               hintText: 'Rechercher un espace...',
-              hintStyle:
-                  const TextStyle(color: Color(0xFF94A3B8), ),
+              hintStyle: const TextStyle(
+                color: Color(0xFF94A3B8),
+              ),
               prefixIcon:
                   const Icon(Icons.search, color: Color(0xFF64748B), size: 18),
               filled: true,
@@ -127,10 +130,11 @@ class SpacesView extends GetView<SpaceController> {
         ),
         const SizedBox(width: 12),
         SizedBox(
-          width: 180,
+          width: 210,
           child: Obx(
             () => DropdownButtonFormField<String>(
               initialValue: _statusFilter.value,
+              isExpanded: true,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
@@ -156,8 +160,14 @@ class SpacesView extends GetView<SpaceController> {
                 'Occupé',
                 'Maintenance',
               ]
-                  .map((value) =>
-                      DropdownMenuItem(value: value, child: Text(value)))
+                  .map((value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ))
                   .toList(),
               onChanged: (value) {
                 if (value != null) _statusFilter.value = value;
@@ -241,29 +251,24 @@ class SpacesView extends GetView<SpaceController> {
               flex: 3,
               child: Text('ESPACE',
                   style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF64748B)))),
+                      fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
           Expanded(
               flex: 2,
               child: Text('TYPE',
                   style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF64748B)))),
+                      fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
           Expanded(
               child: Text('CAPACITÉ',
                   style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF64748B)))),
+                      fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
           Expanded(
               child: Text('TARIF/H',
                   style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF64748B)))),
+                      fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
           Expanded(
               child: Text('STATUT',
                   style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF64748B)))),
+                      fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
           Expanded(
               child: Align(
                   alignment: Alignment.centerRight,
@@ -312,7 +317,8 @@ class SpacesView extends GetView<SpaceController> {
                       child: Text(
                         locationLine,
                         style: const TextStyle(
-                            color: Colors.black54, ),
+                          color: Colors.black54,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -322,7 +328,9 @@ class SpacesView extends GetView<SpaceController> {
                   const SizedBox(height: 2),
                   Text(
                     areaLabel,
-                    style: const TextStyle(color: Colors.black54, ),
+                    style: const TextStyle(
+                      color: Colors.black54,
+                    ),
                   ),
                 ],
               ],

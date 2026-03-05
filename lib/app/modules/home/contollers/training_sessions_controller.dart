@@ -3,13 +3,17 @@ import 'package:flutter_getx_app/app/core/service/auth_service.dart';
 import 'package:flutter_getx_app/app/data/models/course_model.dart';
 import 'package:flutter_getx_app/app/data/models/training_session_model.dart';
 import 'package:flutter_getx_app/app/data/services/courses_api.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
 import 'package:flutter_getx_app/app/data/services/training_sessions_api.dart';
 import 'package:get/get.dart';
 
 class TrainingSessionsController extends GetxController {
+  static const int _studentSessionsMenuIndex = 14;
+
   final TrainingSessionsApi _api;
   final CoursesApi _coursesApi;
   final AuthService _authService;
+  Worker? _menuWorker;
 
   TrainingSessionsController({
     TrainingSessionsApi? api,
@@ -54,6 +58,13 @@ class TrainingSessionsController extends GetxController {
     super.onInit();
     fetchSessions();
     fetchCourses();
+    _watchStudentSessionsMenu();
+  }
+
+  @override
+  void onClose() {
+    _menuWorker?.dispose();
+    super.onClose();
   }
 
   Future<void> fetchSessions() async {
@@ -67,6 +78,20 @@ class TrainingSessionsController extends GetxController {
       Get.snackbar('Erreur', e.toString().replaceFirst('Exception: ', ''));
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> refreshSessionsFromServer({bool withLoader = true}) async {
+    if (withLoader) {
+      await fetchSessions();
+      return;
+    }
+
+    try {
+      final result = await _api.getSessions();
+      sessions.assignAll(result.map(_resolveCourseLabelForSession).toList());
+    } catch (e) {
+      Get.snackbar('Erreur', e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -108,6 +133,8 @@ class TrainingSessionsController extends GetxController {
         fallbackLabel: session.courseLabel,
         fallbackCourseId: session.courseAssociated,
       ));
+
+      await refreshSessionsFromServer(withLoader: false);
 
       studentTabIndex.value = 1;
       Get.snackbar('Succès', 'Inscription effectuée');
@@ -152,6 +179,8 @@ class TrainingSessionsController extends GetxController {
         fallbackCourseId: session.courseAssociated,
       ));
 
+      await refreshSessionsFromServer(withLoader: false);
+
       Get.snackbar('Succès', 'Désinscription effectuée');
     } catch (e) {
       Get.snackbar('Erreur', e.toString().replaceFirst('Exception: ', ''));
@@ -181,6 +210,7 @@ class TrainingSessionsController extends GetxController {
         fallbackCourseId: session.courseAssociated,
       );
       sessions.insert(0, resolved);
+      await refreshSessionsFromServer(withLoader: false);
       Get.snackbar('Succès', 'Session créée avec succès');
     } catch (e) {
       Get.snackbar('Erreur', e.toString().replaceFirst('Exception: ', ''));
@@ -205,6 +235,7 @@ class TrainingSessionsController extends GetxController {
       } else {
         sessions.insert(0, resolved);
       }
+      await refreshSessionsFromServer(withLoader: false);
       Get.snackbar('Succès', 'Session mise à jour');
     } catch (e) {
       Get.snackbar('Erreur', e.toString().replaceFirst('Exception: ', ''));
@@ -238,6 +269,7 @@ class TrainingSessionsController extends GetxController {
     try {
       await _api.deleteSession(session.id);
       sessions.removeWhere((item) => item.id == session.id);
+      await refreshSessionsFromServer(withLoader: false);
       Get.snackbar('Succès', 'Session supprimée');
     } catch (e) {
       Get.snackbar('Erreur', e.toString().replaceFirst('Exception: ', ''));
@@ -283,5 +315,21 @@ class TrainingSessionsController extends GetxController {
       return;
     }
     sessions.insert(0, updated);
+  }
+
+  void _watchStudentSessionsMenu() {
+    if (!Get.isRegistered<HomeController>()) return;
+
+    final home = Get.find<HomeController>();
+
+    _menuWorker = ever<int>(home.selectedMenu, (menuIndex) {
+      if (menuIndex == _studentSessionsMenuIndex) {
+        refreshSessionsFromServer();
+      }
+    });
+
+    if (home.selectedMenu.value == _studentSessionsMenuIndex) {
+      refreshSessionsFromServer();
+    }
   }
 }

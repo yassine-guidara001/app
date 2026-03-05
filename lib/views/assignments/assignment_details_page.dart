@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/custom_sidebar.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/dashboard_topbar.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
 import 'package:flutter_getx_app/controllers/assignments_controller.dart';
 import 'package:flutter_getx_app/models/assignment_model.dart';
@@ -9,6 +10,8 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AssignmentDetailsPage extends GetView<AssignmentsController> {
+  static const int _studentAssignmentsMenuIndex = 11;
+
   final Assignment assignment;
 
   const AssignmentDetailsPage({super.key, required this.assignment});
@@ -66,6 +69,10 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
   }
 
   Widget _buildHeader() {
+    final isStudentMode = Get.isRegistered<HomeController>() &&
+        Get.find<HomeController>().selectedMenu.value ==
+            _studentAssignmentsMenuIndex;
+
     return Row(
       children: [
         IconButton(
@@ -98,33 +105,36 @@ class AssignmentDetailsPage extends GetView<AssignmentsController> {
             ],
           ),
         ),
-        _iconAction(
-          icon: Icons.edit_outlined,
-          color: const Color(0xFF334155),
-          onTap: () => Get.to(() => AssignmentFormPage(assignment: assignment)),
-        ),
-        const SizedBox(width: 8),
-        _iconAction(
-          icon: Icons.delete_outline,
-          color: const Color(0xFFF87171),
-          onTap: () {
-            Get.defaultDialog(
-              title: 'Confirmer',
-              middleText: 'Supprimer ce devoir ?',
-              textCancel: 'Annuler',
-              textConfirm: 'Supprimer',
-              confirmTextColor: Colors.white,
-              buttonColor: const Color(0xFFD32F2F),
-              onConfirm: () async {
-                Get.back();
-                await controller.removeAssignment(assignment.id);
-                if (controller.errorMessage.value.isEmpty) {
-                  Get.offNamed(Routes.DEVOIRS);
-                }
-              },
-            );
-          },
-        ),
+        if (!isStudentMode) ...[
+          _iconAction(
+            icon: Icons.edit_outlined,
+            color: const Color(0xFF334155),
+            onTap: () =>
+                Get.to(() => AssignmentFormPage(assignment: assignment)),
+          ),
+          const SizedBox(width: 8),
+          _iconAction(
+            icon: Icons.delete_outline,
+            color: const Color(0xFFF87171),
+            onTap: () {
+              Get.defaultDialog(
+                title: 'Confirmer',
+                middleText: 'Supprimer ce devoir ?',
+                textCancel: 'Annuler',
+                textConfirm: 'Supprimer',
+                confirmTextColor: Colors.white,
+                buttonColor: const Color(0xFFD32F2F),
+                onConfirm: () async {
+                  Get.back();
+                  await controller.removeAssignment(assignment.id);
+                  if (controller.errorMessage.value.isEmpty) {
+                    Get.offNamed(Routes.DEVOIRS);
+                  }
+                },
+              );
+            },
+          ),
+        ],
       ],
     );
   }
