@@ -257,43 +257,100 @@ class CoursesApi {
   }
 
   Future<Course> getCourseById(int id) async {
-    final populateQuery = [
-      'populate[modules][populate]=*',
-      'populate[instructor][populate]=*',
-    ].join('&');
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/courses/$id?$populateQuery'),
-      headers: _headersOptionalAuth(),
-    );
-
-    if (_isSuccess(response.statusCode)) {
-      return Course.fromJson(_decodeMap(response.body));
+    if (id <= 0) {
+      throw Exception('GET_COURSE_BY_ID Error: id invalide');
     }
 
-    throw _buildHttpException('GET_COURSE_BY_ID', response);
+    final populateQuery = [
+      'populate[modules][populate]=*',
+      'populate[instructor][fields]=username,email',
+    ].join('&');
+
+    final candidateUris = <Uri>[
+      Uri.parse(
+        '$baseUrl/courses?filters[id][\$eq]=$id&$populateQuery',
+      ),
+      Uri.parse('$baseUrl/courses/$id?$populateQuery'),
+    ];
+
+    http.Response? lastResponse;
+
+    for (final uri in candidateUris) {
+      final response = await http.get(
+        uri,
+        headers: _headersOptionalAuth(),
+      );
+      lastResponse = response;
+
+      if (_isSuccess(response.statusCode)) {
+        final decoded = _decodeMap(response.body);
+        final data = decoded['data'];
+
+        if (data is List && data.isNotEmpty) {
+          final first = data.first;
+          if (first is Map<String, dynamic>) {
+            return Course.fromJson(first);
+          }
+        }
+
+        if (data is Map<String, dynamic>) {
+          return Course.fromJson(data);
+        }
+
+        return Course.fromJson(decoded);
+      }
+
+      if (response.statusCode == 400 || response.statusCode == 404) {
+        continue;
+      }
+
+      throw _buildHttpException('GET_COURSE_BY_ID', response);
+    }
+
+    if (lastResponse != null) {
+      throw _buildHttpException('GET_COURSE_BY_ID', lastResponse);
+    }
+
+    throw Exception('GET_COURSE_BY_ID Error: aucune reponse serveur');
   }
 
   Future<Course> createCourse(Course course) async {
-    final payload =
-        _sanitizeCoursePayload(course.toJson(withDataWrapper: false));
+    final payloadVariants =
+        _buildCoursePayloadVariants(course.toJson(withDataWrapper: false));
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/courses'),
-      headers: _headersJson(),
-      body: jsonEncode({'data': payload}),
-    );
+    http.Response? lastResponse;
 
-    if (_isSuccess(response.statusCode)) {
-      return Course.fromJson(_decodeMap(response.body));
+    for (var i = 0; i < payloadVariants.length; i++) {
+      final response = await http.post(
+        Uri.parse('$baseUrl/courses'),
+        headers: _headersJson(),
+        body: jsonEncode({'data': payloadVariants[i]}),
+      );
+      lastResponse = response;
+
+      if (_isSuccess(response.statusCode)) {
+        return Course.fromJson(_decodeMap(response.body));
+      }
+
+      final hasAnotherVariant = i < payloadVariants.length - 1;
+      if (hasAnotherVariant &&
+          _isPayloadValidationStatus(response.statusCode)) {
+        continue;
+      }
+
+      break;
     }
 
-    throw _buildHttpException('CREATE_COURSE', response);
+    if (lastResponse != null) {
+      throw _buildHttpException('CREATE_COURSE', lastResponse);
+    }
+
+    throw Exception('CREATE_COURSE Error: aucune reponse serveur');
   }
 
   Future<Course> updateCourse(Course course) async {
-    final payload =
-        _sanitizeCoursePayload(course.toJson(withDataWrapper: false));
+    final payloadVariants =
+        _buildCoursePayloadVariants(course.toJson(withDataWrapper: false));
 
     final candidateUris = <Uri>[
       if (course.documentId.trim().isNotEmpty)
@@ -310,28 +367,45 @@ class CoursesApi {
     http.Response? lastResponse;
 
     for (final uri in candidateUris) {
-      final response = await http.put(
-        uri,
-        headers: _headersJson(),
-        body: jsonEncode({'data': payload}),
-      );
-      lastResponse = response;
+      var shouldTryNextUri = false;
 
-      if (_isSuccess(response.statusCode)) {
-        if (response.body.trim().isEmpty) {
-          return course;
+      for (var i = 0; i < payloadVariants.length; i++) {
+        final response = await http.put(
+          uri,
+          headers: _headersJson(),
+          body: jsonEncode({'data': payloadVariants[i]}),
+        );
+        lastResponse = response;
+
+        if (_isSuccess(response.statusCode)) {
+          if (response.body.trim().isEmpty) {
+            return course;
+          }
+          return Course.fromJson(_decodeMap(response.body));
         }
-        return Course.fromJson(_decodeMap(response.body));
+
+        if (response.statusCode == 404) {
+          shouldTryNextUri = true;
+          break;
+        }
+
+        final hasAnotherVariant = i < payloadVariants.length - 1;
+        if (hasAnotherVariant &&
+            _isPayloadValidationStatus(response.statusCode)) {
+          continue;
+        }
+
+        break;
       }
 
-      if (response.statusCode == 404) {
+      if (shouldTryNextUri) {
         continue;
       }
 
       break;
     }
 
-    if (lastResponse != null) {
+    if (lastResponse != null && !_isSuccess(lastResponse.statusCode)) {
       throw _buildHttpException('UPDATE_COURSE', lastResponse);
     }
 
@@ -381,18 +455,19 @@ class CoursesApi {
       throw Exception('Auth Error: token JWT manquant');
     }
 
-    return {
-      'Authorization': 'Bearer $token',
+    final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
     };
+
+    return headers;
   }
 
   Map<String, String> _headersOptionalAuth() {
     final token = _readToken();
 
     final headers = <String, String>{
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 
@@ -535,13 +610,14 @@ class CoursesApi {
         message.contains('deja');
   }
 
-  Map<String, dynamic> _sanitizeCoursePayload(Map<String, dynamic> source) {
+  List<Map<String, dynamic>> _buildCoursePayloadVariants(
+      Map<String, dynamic> source) {
     final cleaned = Map<String, dynamic>.from(source);
 
-    if (!cleaned.containsKey('status') && cleaned['mystatus'] != null) {
-      cleaned['status'] = cleaned['mystatus'];
-    }
+    final rawStatus =
+        (cleaned['status'] ?? cleaned['mystatus'])?.toString().trim();
 
+    cleaned.remove('status');
     cleaned.remove('mystatus');
     cleaned.remove('id');
     cleaned.remove('documentId');
@@ -551,7 +627,35 @@ class CoursesApi {
     cleaned.remove('publishedAt');
 
     cleaned.removeWhere((key, value) => value == null);
-    return cleaned;
+
+    final variants = <Map<String, dynamic>>[];
+    final seen = <String>{};
+
+    final withStatus = Map<String, dynamic>.from(cleaned);
+    if (rawStatus != null && rawStatus.isNotEmpty) {
+      withStatus['status'] = rawStatus;
+    }
+
+    final withMystatus = Map<String, dynamic>.from(cleaned);
+    if (rawStatus != null && rawStatus.isNotEmpty) {
+      withMystatus['mystatus'] = rawStatus;
+    }
+
+    for (final candidate in [withStatus, withMystatus]) {
+      final key = jsonEncode(candidate);
+      if (seen.add(key)) {
+        variants.add(candidate);
+      }
+    }
+
+    return variants;
+  }
+
+  bool _isPayloadValidationStatus(int statusCode) {
+    return statusCode == 400 ||
+        statusCode == 404 ||
+        statusCode == 405 ||
+        statusCode == 422;
   }
 
   List<Course> _extractCoursesFromUserPayload(Map<String, dynamic> payload) {

@@ -1,4 +1,6 @@
 import 'package:flutter_getx_app/app/core/service/auth_service.dart';
+import 'package:flutter_getx_app/app/modules/spaces/controllers/spaces_controller.dart';
+import 'package:flutter_getx_app/app/routes/app_routes.dart';
 import 'package:get/get.dart';
 
 class HomeController extends GetxController {
@@ -14,7 +16,6 @@ class HomeController extends GetxController {
     10, // Étudiant - Mes cours
     11, // Étudiant - Mes devoirs
     12, // Étudiant - Catalogue Cours
-    13, // Étudiant - Espaces d'étude
     14, // Étudiant - Sessions
   };
 
@@ -27,6 +28,18 @@ class HomeController extends GetxController {
 
     if (_profileSyncMenuIndexes.contains(index)) {
       _syncCurrentUserForSidebarSection();
+    }
+
+    // Always refresh student spaces list on each menu click.
+    if (route == Routes.STUDENT_SPACES) {
+      if (Get.isRegistered<SpaceController>()) {
+        Get.find<SpaceController>().loadSpaces(forceRefresh: true);
+      }
+
+      if (Get.currentRoute != Routes.STUDENT_SPACES) {
+        Get.toNamed(route);
+      }
+      return;
     }
 
     Get.toNamed(route);

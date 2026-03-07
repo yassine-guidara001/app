@@ -18,6 +18,7 @@ abstract class Routes {
   static const DEVOIRS = '/devoirs';
   static const COMMUNICATION = '/communication';
   static const CREATE_SPACE = '/create-space';
+  static const STUDENT_SPACES = '/student-spaces';
 
   /// AUTRES
   static const PROFILE = '/profile';

@@ -13,6 +13,7 @@ import 'package:flutter_getx_app/views/assignments/assignments_list_page.dart';
 import 'package:flutter_getx_app/app/modules/spaces/controllers/spaces_controller.dart';
 import 'package:flutter_getx_app/app/modules/spaces/views/spaces_view.dart';
 import 'package:flutter_getx_app/app/modules/spaces/views/create_space_view.dart';
+import 'package:flutter_getx_app/app/modules/spaces/views/student_spaces_view.dart';
 import 'package:get/get.dart';
 
 // Pages
@@ -53,6 +54,14 @@ class AppPages {
       page: () => const CreateSpaceView(),
       binding: BindingsBuilder(() {
         Get.lazyPut<SpaceController>(() => SpaceController(), fenix: true);
+      }),
+    ),
+    GetPage(
+      name: Routes.STUDENT_SPACES,
+      page: () => const StudentSpacesView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<SpaceController>(() => SpaceController(), fenix: true);
+        Get.put(HomeController(), permanent: true);
       }),
     ),
     GetPage(

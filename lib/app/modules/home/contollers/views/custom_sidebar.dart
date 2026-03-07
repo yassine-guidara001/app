@@ -116,7 +116,7 @@ class CustomSidebar extends StatelessWidget {
                   _menuItem(controller, 12, Icons.school_outlined,
                       "Catalogue Cours", Routes.FORMATIONS),
                   _menuItem(controller, 13, Icons.apartment_outlined,
-                      "Espaces d'étude", Routes.SPACES),
+                      "Espaces d'étude", Routes.STUDENT_SPACES),
                   _menuItem(controller, 14, Icons.calendar_today_outlined,
                       "Sessions", Routes.SESSIONS),
                   _menuItem(controller, 15, Icons.place_outlined,

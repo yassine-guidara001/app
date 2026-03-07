@@ -74,12 +74,17 @@ class AssignmentsApi {
     bool onlyTodo = false,
   }) async {
     final populateQuery = [
-      'populate=course',
-      'populate=submissions',
       'populate=attachment',
+      'populate=submissions',
+      'populate=course',
     ].join('&');
 
     final normalizedCourseDocumentId = courseDocumentId?.trim() ?? '';
+
+    if ((courseId == null || courseId <= 0) &&
+        normalizedCourseDocumentId.isEmpty) {
+      return const <Assignment>[];
+    }
 
     final candidateUris = <Uri>[
       if (courseId != null && courseId > 0)
@@ -90,8 +95,9 @@ class AssignmentsApi {
         Uri.parse(
           '$_baseApiUrl/assignments?filters[course][documentId][\$eq]=${Uri.encodeComponent(normalizedCourseDocumentId)}&$populateQuery',
         ),
-      Uri.parse('$_baseApiUrl/assignments?$populateQuery'),
     ];
+
+    final merged = <Assignment>[];
 
     for (final uri in candidateUris) {
       final parsed = await _fetchAssignmentsCandidate(uri);
@@ -99,39 +105,54 @@ class AssignmentsApi {
         continue;
       }
 
-      final filteredByCourse = parsed.where((assignment) {
-        if (courseId != null && courseId > 0 && assignment.courseId != null) {
-          if (assignment.courseId == courseId) {
-            return true;
-          }
-        }
-
-        if (normalizedCourseDocumentId.isNotEmpty) {
-          final assignmentDoc = assignment.courseDocumentId?.trim() ?? '';
-          if (assignmentDoc == normalizedCourseDocumentId) {
-            return true;
-          }
-        }
-
-        if (courseId == null && normalizedCourseDocumentId.isEmpty) {
-          return true;
-        }
-
-        return false;
-      }).toList();
-
-      if (!onlyTodo) {
-        return filteredByCourse;
-      }
-
-      final now = DateTime.now();
-      return filteredByCourse.where((assignment) {
-        // "A faire" only: hide expired assignments.
-        return !assignment.dueDate.isBefore(now);
-      }).toList();
+      merged.addAll(parsed);
     }
 
-    return const <Assignment>[];
+    if (merged.isEmpty) {
+      return const <Assignment>[];
+    }
+
+    final unique = _dedupeById(merged);
+
+    final filteredByCourse = unique.where((assignment) {
+      var matchesId = false;
+      var matchesDocumentId = false;
+
+      if (courseId != null && courseId > 0) {
+        matchesId = assignment.courseId == courseId;
+      }
+
+      if (normalizedCourseDocumentId.isNotEmpty) {
+        final assignmentDoc = assignment.courseDocumentId?.trim() ?? '';
+        matchesDocumentId = assignmentDoc == normalizedCourseDocumentId;
+      }
+
+      if (courseId != null &&
+          courseId > 0 &&
+          normalizedCourseDocumentId.isNotEmpty) {
+        return matchesId || matchesDocumentId;
+      }
+
+      if (courseId != null && courseId > 0) {
+        return matchesId;
+      }
+
+      if (normalizedCourseDocumentId.isNotEmpty) {
+        return matchesDocumentId;
+      }
+
+      return false;
+    }).toList();
+
+    if (!onlyTodo) {
+      return filteredByCourse;
+    }
+
+    final now = DateTime.now();
+    return filteredByCourse.where((assignment) {
+      // "A faire" only: hide expired assignments.
+      return !assignment.dueDate.isBefore(now);
+    }).toList();
   }
 
   Future<List<Assignment>?> _fetchAssignmentsCandidate(Uri baseUri) async {

@@ -97,29 +97,64 @@ class SpaceApi {
     return {'data': data};
   }
 
-  static Future<List<Space>> getSpaces({bool populate = false}) async {
-    final query = populate ? const {'populate': '*'} : null;
-    http.Response res = await http.get(
-      _spacesCollectionUri(queryParameters: query),
-      headers: await _headersGet(),
-    );
+  static Future<List<Space>> getSpaces({
+    bool populate = false,
+    bool forceRefresh = false,
+  }) async {
+    final headers = await _headersGet();
+    final allSpaces = <Space>[];
+    var page = 1;
+    final refreshToken =
+        forceRefresh ? DateTime.now().millisecondsSinceEpoch.toString() : null;
 
-    if (res.statusCode == 404) {
-      res = await http.get(
-        _spacesCollectionUriAlt(queryParameters: query),
-        headers: await _headersGet(),
+    while (true) {
+      final query = <String, String>{
+        if (populate) 'populate': '*',
+        'sort': 'createdAt:desc',
+        'pagination[page]': '$page',
+        'pagination[pageSize]': '25',
+        if (refreshToken != null) '_t': refreshToken,
+      };
+
+      http.Response res = await http.get(
+        _spacesCollectionUri(queryParameters: query),
+        headers: headers,
       );
+
+      if (res.statusCode == 404) {
+        res = await http.get(
+          _spacesCollectionUriAlt(queryParameters: query),
+          headers: headers,
+        );
+      }
+
+      if (res.statusCode != 200) {
+        throw Exception(_errorMessage(res));
+      }
+
+      final decoded = jsonDecode(res.body);
+      final data = decoded is Map<String, dynamic> ? decoded['data'] : null;
+      if (data is! List) break;
+
+      final chunk = data.map((e) => Space.fromJson(e)).toList().cast<Space>();
+      allSpaces.addAll(chunk);
+
+      final meta = decoded is Map<String, dynamic> ? decoded['meta'] : null;
+      final pagination =
+          meta is Map<String, dynamic> ? meta['pagination'] : null;
+      final pageCount = pagination is Map<String, dynamic>
+          ? int.tryParse('${pagination['pageCount'] ?? ''}')
+          : null;
+
+      // If pagination metadata is missing, treat response as fully loaded.
+      if (pageCount == null || page >= pageCount || chunk.isEmpty) {
+        break;
+      }
+
+      page++;
     }
 
-    if (res.statusCode != 200) {
-      throw Exception(_errorMessage(res));
-    }
-
-    final decoded = jsonDecode(res.body);
-    final data = decoded is Map<String, dynamic> ? decoded['data'] : null;
-    if (data is! List) return <Space>[];
-
-    return data.map((e) => Space.fromJson(e)).toList().cast<Space>();
+    return allSpaces;
   }
 
   static Future<Space> getSpace(String documentId,
