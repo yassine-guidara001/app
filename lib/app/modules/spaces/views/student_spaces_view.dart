@@ -4,6 +4,7 @@ import 'package:flutter_getx_app/app/data/models/space_model.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/custom_sidebar.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/dashboard_topbar.dart';
 import 'package:flutter_getx_app/app/modules/spaces/controllers/spaces_controller.dart';
+import 'package:flutter_getx_app/app/modules/spaces/views/student_space_reservation_view.dart';
 
 class StudentSpacesView extends StatefulWidget {
   const StudentSpacesView({super.key});
@@ -39,14 +40,12 @@ class _StudentSpacesViewState extends State<StudentSpacesView> {
                 const DashboardTopBar(),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildHeroCard(),
-                        const SizedBox(height: 18),
                         _buildSearchBar(),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 16),
                         _buildSpacesGrid(),
                       ],
                     ),
@@ -60,99 +59,29 @@ class _StudentSpacesViewState extends State<StudentSpacesView> {
     );
   }
 
-  Widget _buildHeroCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 28),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDDE8F8),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFD0DDF0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFBFD6F8),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'COWORKING & STUDY',
-              style: TextStyle(
-                color: Color(0xFF1664FF),
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-                fontSize: 10,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(
-                color: Color(0xFF0F172A),
-                fontSize: 44,
-                height: 1.08,
-                fontWeight: FontWeight.w800,
-              ),
-              children: [
-                TextSpan(text: 'Trouvez '),
-                TextSpan(
-                  text: "l'espace ideal",
-                  style: TextStyle(color: Color(0xFF1664FF)),
-                ),
-                TextSpan(text: ' pour vos etudes'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          const Text(
-            'Reservez des bureaux premium, des salles de reunion ou des postes de travail equipes.',
-            style: TextStyle(
-              color: Color(0xFF475569),
-              fontSize: 14,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Profitez de nos abonnements mensuels avantageux.',
-            style: TextStyle(
-              color: Color(0xFF475569),
-              fontSize: 14,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSearchBar() {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 650),
+        constraints: const BoxConstraints(maxWidth: 510),
         child: Container(
-          height: 56,
+          height: 38,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFDCE4EF)),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFD6DFEA)),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x140F172A),
-                blurRadius: 20,
-                offset: Offset(0, 4),
+                color: Color(0x120F172A),
+                blurRadius: 14,
+                offset: Offset(0, 2),
               )
             ],
           ),
           child: Row(
             children: [
-              const Icon(Icons.search, size: 20, color: Color(0xFF6B7280)),
-              const SizedBox(width: 10),
+              const Icon(Icons.search, size: 16, color: Color(0xFF6B7280)),
+              const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   onChanged: (value) {
@@ -165,6 +94,7 @@ class _StudentSpacesViewState extends State<StudentSpacesView> {
                     hintStyle: TextStyle(
                       color: Color(0xFF94A3B8),
                       fontWeight: FontWeight.w500,
+                      fontSize: 12,
                     ),
                     border: InputBorder.none,
                     isDense: true,
@@ -220,21 +150,44 @@ class _StudentSpacesViewState extends State<StudentSpacesView> {
         );
       }
 
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: filtered.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: 0.80,
-            ),
-            itemBuilder: (context, index) => _SpaceCard(space: filtered[index]),
-          );
-        },
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              var crossAxisCount = 3;
+              var spacing = 18.0;
+              var childAspectRatio = 0.72;
+
+              if (width < 760) {
+                crossAxisCount = 2;
+                spacing = 16.0;
+                childAspectRatio = 0.73;
+              }
+
+              if (width < 560) {
+                crossAxisCount = 1;
+                spacing = 14.0;
+                childAspectRatio = 0.95;
+              }
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filtered.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: spacing,
+                  mainAxisSpacing: spacing,
+                  childAspectRatio: childAspectRatio,
+                ),
+                itemBuilder: (context, index) =>
+                    _SpaceCard(space: filtered[index]),
+              );
+            },
+          ),
+        ),
       );
     });
   }
@@ -254,13 +207,13 @@ class _SpaceCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFD9E2EE)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x120F172A),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            blurRadius: 9,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -268,7 +221,7 @@ class _SpaceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
             child: Row(
               children: [
                 _tinyChip(
@@ -280,7 +233,7 @@ class _SpaceCard extends StatelessWidget {
           ),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 0),
-            height: 148,
+            height: 164,
             width: double.infinity,
             decoration: const BoxDecoration(
               color: Color(0xFFF3F4F6),
@@ -294,7 +247,7 @@ class _SpaceCard extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -303,13 +256,13 @@ class _SpaceCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 28,
+                      fontSize: 24,
                       fontWeight: FontWeight.w800,
                       color: Color(0xFF020617),
                       height: 1.0,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       const Icon(Icons.location_on_outlined,
@@ -329,7 +282,7 @@ class _SpaceCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -350,7 +303,7 @@ class _SpaceCard extends StatelessWidget {
                     ],
                   ),
                   const Spacer(),
-                  const Divider(height: 18, color: Color(0xFFE2E8F0)),
+                  const Divider(height: 14, color: Color(0xFFE2E8F0)),
                   Row(
                     children: [
                       Expanded(
@@ -361,7 +314,7 @@ class _SpaceCard extends StatelessWidget {
                             text: TextSpan(
                               style: const TextStyle(
                                 color: Color(0xFF0F172A),
-                                fontSize: 30,
+                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
                               ),
                               children: [
@@ -369,7 +322,7 @@ class _SpaceCard extends StatelessWidget {
                                 const TextSpan(
                                   text: ' / heure',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     color: Color(0xFF64748B),
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -381,10 +334,8 @@ class _SpaceCard extends StatelessWidget {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          Get.snackbar(
-                            'Reservation',
-                            'Reservation pour ${space.name} (bientot disponible)',
-                            snackPosition: SnackPosition.BOTTOM,
+                          Get.to(
+                            () => StudentSpaceReservationView(space: space),
                           );
                         },
                         style: ElevatedButton.styleFrom(
@@ -392,7 +343,7 @@ class _SpaceCard extends StatelessWidget {
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
+                              horizontal: 16, vertical: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -402,9 +353,12 @@ class _SpaceCard extends StatelessWidget {
                           children: [
                             Text(
                               'Reserver',
-                              style: TextStyle(fontWeight: FontWeight.w700),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: 5),
                             Icon(Icons.chevron_right, size: 16),
                           ],
                         ),
@@ -422,7 +376,7 @@ class _SpaceCard extends StatelessWidget {
 
   Widget _tinyChip(String label, Color bg, Color fg) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(30),
@@ -439,7 +393,7 @@ class _SpaceCard extends StatelessWidget {
         style: TextStyle(
           color: fg,
           fontWeight: FontWeight.w700,
-          fontSize: 10,
+          fontSize: 9,
         ),
       ),
     );
@@ -447,7 +401,7 @@ class _SpaceCard extends StatelessWidget {
 
   Widget _statBox(String title, String value, bool highlighted) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: highlighted ? const Color(0xFFEEF5FF) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
@@ -465,7 +419,7 @@ class _SpaceCard extends StatelessWidget {
               color: highlighted
                   ? const Color(0xFF2563EB)
                   : const Color(0xFF64748B),
-              fontSize: 9,
+              fontSize: 7,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.2,
             ),
@@ -482,7 +436,7 @@ class _SpaceCard extends StatelessWidget {
                 color: highlighted
                     ? const Color(0xFF2563EB)
                     : const Color(0xFF0F172A),
-                fontSize: 22,
+                fontSize: 16,
                 fontWeight: FontWeight.w800,
                 height: 1.0,
               ),

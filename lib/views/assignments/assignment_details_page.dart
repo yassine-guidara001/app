@@ -10,7 +10,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AssignmentDetailsPage extends GetView<AssignmentsController> {
-  static const int _studentAssignmentsMenuIndex = 11;
+  static const int _studentAssignmentsMenuIndex = 14;
 
   final Assignment assignment;
 

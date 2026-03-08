@@ -6,8 +6,8 @@ import 'package:flutter_getx_app/services/assignments_api.dart';
 import 'package:get/get.dart';
 
 class AssignmentsController extends GetxController {
-  static const int _teacherAssignmentsMenuIndex = 8;
-  static const int _studentAssignmentsMenuIndex = 11;
+  static const int _teacherAssignmentsMenuIndex = 11;
+  static const int _studentAssignmentsMenuIndex = 14;
 
   final AssignmentsApi _api;
   final CoursesApi _coursesApi;

@@ -1,13 +1,13 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_getx_app/app/core/service/storage_service.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/space_model.dart';
 
 class SpaceApi {
   static const String baseUrl = 'http://193.111.250.244:3046/api';
-  static const FlutterSecureStorage storage = FlutterSecureStorage();
 
   // Certains backends acceptent uniquement /spaces (sans slash final),
   // d'autres uniquement /spaces/ (avec slash). On supporte les deux.
@@ -40,9 +40,25 @@ class SpaceApi {
   }
 
   static Future<String?> _getToken() async {
-    final token = await storage.read(key: 'jwt');
-    if (token == null || token.trim().isEmpty) return null;
-    return token;
+    try {
+      final storage = Get.find<StorageService>();
+      final raw = storage.getToken() ??
+          storage.read<String>('jwt') ??
+          storage.read<String>('token');
+
+      if (raw == null) return null;
+
+      final trimmed = raw.trim();
+      if (trimmed.isEmpty) return null;
+
+      if (trimmed.toLowerCase().startsWith('bearer ')) {
+        return trimmed.substring(7).trim();
+      }
+
+      return trimmed;
+    } catch (_) {
+      return null;
+    }
   }
 
   static Future<Map<String, String>> _headers(
@@ -251,73 +267,28 @@ class SpaceApi {
   }
 
   static Future<void> deleteSpace(String documentId) async {
-    final headersGet = await _headersGet();
-    final headersJson = await _headersJson();
-
     final trimmedDocumentId = documentId.trim();
-
-    assert(() {
-      // Debug only: aide à vérifier si on supprime bien via documentId.
-      print('DELETE Space documentId="$trimmedDocumentId"');
-      print(
-          'DELETE URIs: ${_spaceItemUri(trimmedDocumentId)} | ${_spaceItemUriAlt(trimmedDocumentId)}');
-      return true;
-    }());
 
     if (trimmedDocumentId.isEmpty) {
       throw Exception(
           'documentId manquant: impossible de supprimer cet espace');
     }
 
-    Future<http.Response?> tryDeleteWithUris(List<Uri> uris) async {
-      http.Response? lastResponse;
-      for (final uri in uris) {
-        try {
-          var res = await http.delete(uri, headers: headersGet);
-
-          // Certains backends/proxys exigent un Content-Type même sur DELETE.
-          if (res.statusCode == 400 || res.statusCode == 415) {
-            res = await http.delete(uri, headers: headersJson);
-          }
-
-          lastResponse = res;
-
-          // Succès: Strapi/serveurs peuvent renvoyer 200, 202, 204...
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            return res;
-          }
-
-          // Si c'est 404, on tente la variante suivante (slash / no-slash).
-          if (res.statusCode == 404) {
-            continue;
-          }
-
-          // Autres erreurs: inutile de retenter l'autre URL dans la plupart des cas.
-          break;
-        } catch (_) {
-          continue;
-        }
-      }
-      return lastResponse;
+    final headers = await _headersGet();
+    if (!headers.containsKey('Authorization')) {
+      throw Exception('Session expirée: reconnectez-vous puis réessayez');
     }
 
-    // Suppression par documentId (Strapi v5)
-    final byDocumentId = await tryDeleteWithUris([
+    final res = await http.delete(
       _spaceItemUri(trimmedDocumentId),
-      _spaceItemUriAlt(trimmedDocumentId),
-    ]);
+      headers: headers,
+    );
 
-    if (byDocumentId != null &&
-        byDocumentId.statusCode >= 200 &&
-        byDocumentId.statusCode < 300) {
+    if (res.statusCode >= 200 && res.statusCode < 300) {
       return;
     }
 
-    if (byDocumentId != null) {
-      throw Exception(_errorMessage(byDocumentId));
-    }
-
-    throw Exception('Erreur réseau lors de la suppression');
+    throw Exception(_errorMessage(res));
   }
 
   static Space _parseSpaceFromResponse(http.Response res) {

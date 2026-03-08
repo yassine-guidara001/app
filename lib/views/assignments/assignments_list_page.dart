@@ -48,7 +48,7 @@ class _AssignmentsListContent extends StatefulWidget {
 }
 
 class _AssignmentsListContentState extends State<_AssignmentsListContent> {
-  static const int _studentAssignmentsMenuIndex = 11;
+  static const int _studentAssignmentsMenuIndex = 14;
 
   final TextEditingController _searchCtrl = TextEditingController();
 

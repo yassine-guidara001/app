@@ -8,20 +8,20 @@ class HomeController extends GetxController {
   /// 🔵 SIDEBAR MENU
   /// ===============================
   static const Set<int> _profileSyncMenuIndexes = <int>{
-    5, // Enseignant - Formations
-    6, // Enseignant - Sessions
-    7, // Enseignant - Étudiants
-    8, // Enseignant - Devoirs
-    9, // Enseignant - Communication
-    10, // Étudiant - Mes cours
-    11, // Étudiant - Mes devoirs
-    12, // Étudiant - Catalogue Cours
-    14, // Étudiant - Sessions
+    8, // Enseignant - Formations
+    9, // Enseignant - Sessions
+    10, // Enseignant - Étudiants
+    11, // Enseignant - Devoirs
+    12, // Enseignant - Communication
+    13, // Étudiant - Mes cours
+    14, // Étudiant - Mes devoirs
+    15, // Étudiant - Catalogue Cours
+    17, // Étudiant - Sessions
   };
 
   final AuthService _authService = Get.find<AuthService>();
 
-  final selectedMenu = 3.obs; // utilisateurs selected par défaut
+  final selectedMenu = 5.obs; // utilisateurs selected par défaut
 
   void changeMenu(int index, String route) {
     selectedMenu.value = index;

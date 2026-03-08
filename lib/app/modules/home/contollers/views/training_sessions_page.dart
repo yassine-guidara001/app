@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 class TrainingSessionsPage extends GetView<TrainingSessionsController> {
   const TrainingSessionsPage({super.key});
 
-  static const int _studentSessionsMenuIndex = 14;
+  static const int _studentSessionsMenuIndex = 17;
   static const Color _bg = Color(0xFFF1F5F9);
   static const Color _border = Color(0xFFE2E8F0);
   static const Color _textMuted = Color(0xFF64748B);

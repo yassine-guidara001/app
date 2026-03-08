@@ -9,6 +9,7 @@ class SpaceController extends GetxController {
   final spaces = <Space>[].obs;
   final loading = false.obs;
   final errorMessage = ''.obs;
+  final deletingDocumentIds = <String>{}.obs;
   Future<void>? _inFlightLoad;
 
   // ================= INIT =================
@@ -119,12 +120,34 @@ class SpaceController extends GetxController {
 
   // ================= DELETE =================
 
-  Future<void> delete(String documentId) async {
+  bool isDeleting(String documentId) {
+    return deletingDocumentIds.contains(documentId.trim());
+  }
+
+  Future<void> delete(Space space) async {
+    final docId = space.documentId.trim();
+    if (docId.isEmpty) {
+      Get.snackbar(
+        "Erreur suppression",
+        "documentId manquant",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    if (deletingDocumentIds.contains(docId)) {
+      return;
+    }
+
+    deletingDocumentIds.add(docId);
+
     try {
       loading.value = true;
 
-      await SpaceApi.deleteSpace(documentId);
-      spaces.removeWhere((e) => e.documentId == documentId);
+      await SpaceApi.deleteSpace(docId);
+      spaces.removeWhere(
+        (e) => e.documentId == docId || e.id == space.id,
+      );
 
       Get.snackbar(
         "Succès",
@@ -139,6 +162,7 @@ class SpaceController extends GetxController {
       );
     } finally {
       loading.value = false;
+      deletingDocumentIds.remove(docId);
     }
   }
 

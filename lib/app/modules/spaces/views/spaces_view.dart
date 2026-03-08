@@ -415,9 +415,20 @@ class SpacesView extends GetView<SpaceController> {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline,
-                        size: 18, color: Colors.red),
-                    onPressed: () => controller.delete(space.documentId),
+                    icon: controller.isDeleting(space.documentId)
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.red,
+                            ),
+                          )
+                        : const Icon(Icons.delete_outline,
+                            size: 18, color: Colors.red),
+                    onPressed: controller.isDeleting(space.documentId)
+                        ? null
+                        : () => controller.delete(space),
                   ),
                 ],
               ),

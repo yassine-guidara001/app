@@ -12,8 +12,8 @@ import 'custom_sidebar.dart';
 class CoursesView extends GetView<CourseController> {
   const CoursesView({super.key});
 
-  static const int _studentMyCoursesMenuIndex = 10;
-  static const int _studentCatalogMenuIndex = 12;
+  static const int _studentMyCoursesMenuIndex = 13;
+  static const int _studentCatalogMenuIndex = 15;
 
   HomeController get _homeController => Get.find<HomeController>();
 

@@ -8,7 +8,7 @@ import 'package:flutter_getx_app/app/data/services/training_sessions_api.dart';
 import 'package:get/get.dart';
 
 class TrainingSessionsController extends GetxController {
-  static const int _studentSessionsMenuIndex = 14;
+  static const int _studentSessionsMenuIndex = 17;
 
   final TrainingSessionsApi _api;
   final CoursesApi _coursesApi;
