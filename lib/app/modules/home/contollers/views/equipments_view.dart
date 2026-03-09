@@ -29,6 +29,8 @@ class EquipmentsView extends StatelessWidget {
                         _buildFilterBar(),
                         const SizedBox(height: 24),
                         _buildEquipmentsTable(),
+                        const SizedBox(height: 20),
+                        _buildEquipmentStatsSection(),
                       ],
                     ),
                   ),
@@ -239,6 +241,80 @@ class EquipmentsView extends StatelessWidget {
         );
       }),
     );
+  }
+
+  Widget _buildEquipmentStatsSection() {
+    return Obx(() {
+      final items = controller.equipments;
+      final total = items.length;
+      final disponible = items
+          .where((e) => _normalizeEquipmentStatus(e.status) == 'disponible')
+          .length;
+      final enPanne = items
+          .where((e) => _normalizeEquipmentStatus(e.status) == 'en panne')
+          .length;
+      final enMaintenance = items
+          .where((e) => _normalizeEquipmentStatus(e.status) == 'en maintenance')
+          .length;
+
+      return Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: [
+          _buildStatsCard('Total', total, const Color(0xFF0F172A)),
+          _buildStatsCard('Disponible', disponible, const Color(0xFF16A34A)),
+          _buildStatsCard('En panne', enPanne, const Color(0xFFDC2626)),
+          _buildStatsCard(
+            'En maintenance',
+            enMaintenance,
+            const Color(0xFFF59E0B),
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildStatsCard(String label, int value, Color valueColor) {
+    return Container(
+      width: 370,
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '$value',
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
+              height: 0.95,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _normalizeEquipmentStatus(String raw) {
+    final value = raw.trim().toLowerCase().replaceAll('_', ' ');
+    if (value.contains('disponible')) return 'disponible';
+    if (value.contains('panne') || value.contains('occup')) return 'en panne';
+    if (value.contains('maitenance') || value.contains('maintenance')) {
+      return 'en maintenance';
+    }
+    return value;
   }
 
   Widget _buildHeaderCell(String label,

@@ -37,6 +37,8 @@ class _StudentCourseAccessPageState extends State<StudentCourseAccessPage> {
   bool _isLoadingAssignments = false;
   String _assignmentsError = '';
   List<Assignment> _todoAssignments = <Assignment>[];
+  Map<int, List<Map<String, dynamic>>> _submissionsByAssignment =
+      const <int, List<Map<String, dynamic>>>{};
   Course? _loadedCourse;
 
   Course get _currentCourse => _loadedCourse ?? widget.course;
@@ -102,15 +104,22 @@ class _StudentCourseAccessPageState extends State<StudentCourseAccessPage> {
 
       result.sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
-      // 2) Requetes submissions en parallele: 1 appel par devoir.
-      await Future.wait(
-        result.where((assignment) => assignment.id > 0).map((assignment) =>
-            _assignmentsApi.getSubmissionsForAssignment(assignment.id)),
-      );
+      // 2) Requete submissions agrégée pour éviter le N+1.
+      final assignmentIds = result
+          .where((assignment) => assignment.id > 0)
+          .map((e) => e.id)
+          .toSet();
+
+      final groupedSubmissions = assignmentIds.isEmpty
+          ? const <int, List<Map<String, dynamic>>>{}
+          : await _assignmentsApi.getStudentSubmissionsByAssignment(
+              assignmentIds: assignmentIds,
+            );
 
       if (!mounted) return;
       setState(() {
         _todoAssignments = result;
+        _submissionsByAssignment = groupedSubmissions;
       });
     } catch (e) {
       if (!mounted) return;
@@ -562,6 +571,14 @@ class _StudentCourseAccessPageState extends State<StudentCourseAccessPage> {
   }
 
   Widget _buildAssignmentCard(Assignment assignment) {
+    final hasSubmission =
+        (_submissionsByAssignment[assignment.id]?.isNotEmpty ?? false);
+    final now = DateTime.now();
+    final isExpired = assignment.dueDate.isBefore(now) &&
+        !assignment.allowLateSubmission &&
+        !hasSubmission;
+    final actionLabel = hasSubmission ? 'Re-soumettre' : 'Soumettre';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -638,24 +655,26 @@ class _StudentCourseAccessPageState extends State<StudentCourseAccessPage> {
             width: 160,
             height: 44,
             child: ElevatedButton(
-              onPressed: () {
-                _showSubmitDialog(assignment);
-              },
+              onPressed: isExpired
+                  ? null
+                  : () {
+                      _showSubmitDialog(assignment);
+                    },
               style: ElevatedButton.styleFrom(
-                backgroundColor: _primary,
+                backgroundColor: isExpired ? const Color(0xFFCBD5E1) : _primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.send_outlined, size: 16),
                   SizedBox(width: 8),
                   Text(
-                    'Soumettre',
+                    actionLabel,
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ],

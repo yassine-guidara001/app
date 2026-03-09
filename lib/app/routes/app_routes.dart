@@ -15,6 +15,7 @@ abstract class Routes {
   static const RESERVATIONS = '/reservations';
   static const ASSOCIATIONS = '/associations';
   static const PAYMENTS = '/payments';
+  static const PROFESSIONAL_SUBSCRIPTIONS = '/professional-subscriptions';
   static const FORMATIONS = '/formations';
   static const SESSIONS = '/sessions';
   static const DEVOIRS = '/devoirs';

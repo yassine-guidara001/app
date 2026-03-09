@@ -18,6 +18,7 @@ class AssignmentsController extends GetxController {
         _coursesApi = coursesApi ?? CoursesApi();
 
   final RxList<Assignment> assignments = <Assignment>[].obs;
+  final RxMap<int, int> studentSubmissionCountByAssignment = <int, int>{}.obs;
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
 
@@ -43,7 +44,14 @@ class AssignmentsController extends GetxController {
     try {
       final isTeacherMode = teacherMode ?? _isTeacherAssignmentsMode();
       final result = await _api.getAssignments(onlyInstructor: isTeacherMode);
-      assignments.assignAll(result.map(_resolveCourseName).toList());
+      final resolvedAssignments = result.map(_resolveCourseName).toList();
+      assignments.assignAll(resolvedAssignments);
+
+      if (isTeacherMode) {
+        studentSubmissionCountByAssignment.clear();
+      } else {
+        await _loadStudentSubmissionState(resolvedAssignments);
+      }
     } catch (e) {
       final message = _normalizeError(e);
       errorMessage.value = message;
@@ -112,6 +120,7 @@ class AssignmentsController extends GetxController {
     try {
       await _api.deleteAssignment(id);
       assignments.removeWhere((item) => item.id == id);
+      studentSubmissionCountByAssignment.remove(id);
       Get.snackbar('Succès', 'Devoir supprimé avec succès');
     } catch (e) {
       final message = _normalizeError(e);
@@ -119,6 +128,54 @@ class AssignmentsController extends GetxController {
       Get.snackbar('Erreur', message);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  bool hasStudentSubmission(Assignment assignment) {
+    return (studentSubmissionCountByAssignment[assignment.id] ?? 0) > 0;
+  }
+
+  String studentStatusFor(Assignment assignment) {
+    if (hasStudentSubmission(assignment)) {
+      return 'Soumis';
+    }
+
+    final now = DateTime.now();
+    if (!assignment.dueDate.isBefore(now)) {
+      return 'A faire';
+    }
+
+    if (assignment.allowLateSubmission) {
+      return 'En retard';
+    }
+
+    return 'Expire';
+  }
+
+  Future<void> _loadStudentSubmissionState(List<Assignment> items) async {
+    final assignmentIds = items
+        .where((assignment) => assignment.id > 0)
+        .map((assignment) => assignment.id)
+        .toSet();
+
+    if (assignmentIds.isEmpty) {
+      studentSubmissionCountByAssignment.clear();
+      return;
+    }
+
+    try {
+      final grouped = await _api.getStudentSubmissionsByAssignment(
+        assignmentIds: assignmentIds,
+      );
+
+      final next = <int, int>{};
+      for (final id in assignmentIds) {
+        next[id] = grouped[id]?.length ?? 0;
+      }
+
+      studentSubmissionCountByAssignment.assignAll(next);
+    } catch (_) {
+      studentSubmissionCountByAssignment.clear();
     }
   }
 

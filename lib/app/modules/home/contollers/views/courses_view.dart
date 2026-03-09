@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_getx_app/app/data/models/course_model.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/course_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/professional_formations_page.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/student_course_access_page.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
 import 'package:get/get.dart';
@@ -14,6 +15,7 @@ class CoursesView extends GetView<CourseController> {
 
   static const int _studentMyCoursesMenuIndex = 13;
   static const int _studentCatalogMenuIndex = 15;
+  static const int _professionalFormationsMenuIndex = 20;
 
   HomeController get _homeController => Get.find<HomeController>();
 
@@ -30,6 +32,8 @@ class CoursesView extends GetView<CourseController> {
               final isStudentMyCourses =
                   selectedMenu == _studentMyCoursesMenuIndex;
               final isStudentCatalog = selectedMenu == _studentCatalogMenuIndex;
+              final isProfessionalFormations =
+                  selectedMenu == _professionalFormationsMenuIndex;
 
               if (isStudentMyCourses) {
                 return _buildStudentMyCoursesView();
@@ -37,6 +41,17 @@ class CoursesView extends GetView<CourseController> {
 
               if (isStudentCatalog) {
                 return _buildStudentCatalogView();
+              }
+
+              if (isProfessionalFormations) {
+                return Column(
+                  children: [
+                    _buildTopBar(),
+                    const Expanded(
+                      child: ProfessionalFormationsPage(),
+                    ),
+                  ],
+                );
               }
 
               return Column(

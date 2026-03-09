@@ -31,6 +31,44 @@ class TrainingSessionsApi {
     return const [];
   }
 
+  Future<List<TrainingSession>> getProfessionalAvailableSessions() async {
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final endpoint =
+        '/training-sessions?populate[course][populate]=*&populate=attendees&filters[mystatus][\$containsi]=Planifi&sort=start_datetime:asc&_ts=$ts';
+    final response = await _get(endpoint);
+    final decoded = _decodeMap(response.body);
+    final data = decoded['data'];
+
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((item) =>
+              TrainingSession.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+
+    return const [];
+  }
+
+  Future<List<TrainingSession>> getProfessionalMySessions(int userId) async {
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final endpoint =
+        '/training-sessions?filters[attendees][id][\$eq]=$userId&populate=course&populate=attendees&sort=start_datetime:asc&_ts=$ts';
+    final response = await _get(endpoint);
+    final decoded = _decodeMap(response.body);
+    final data = decoded['data'];
+
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((item) =>
+              TrainingSession.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+
+    return const [];
+  }
+
   Future<TrainingSession> getSession(dynamic id) async {
     final endpoint =
         '/training-sessions/$id?populate=attendees&populate=course';

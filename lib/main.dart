@@ -12,9 +12,13 @@ import 'package:flutter_getx_app/app/core/service/auth_service.dart';
 // Routes
 import 'package:flutter_getx_app/app/routes/app_pages.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Required for DateFormat(..., 'fr_FR') used in reservation tables.
+  await initializeDateFormatting('fr_FR');
 
   // Initialiser GetStorage
   await GetStorage.init();

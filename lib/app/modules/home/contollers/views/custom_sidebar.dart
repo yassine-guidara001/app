@@ -122,6 +122,36 @@ class CustomSidebar extends StatelessWidget {
                       "Plan des espaces", Routes.SPACES),
                   _menuItem(controller, 19, Icons.groups_outlined,
                       "Communication", Routes.COMMUNICATION),
+                  const SizedBox(height: 24),
+
+                  /// PROFESSIONNEL Section
+                  const Text("PROFESSIONNEL",
+                      style: TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1)),
+                  const SizedBox(height: 12),
+                  _menuItem(controller, 20, Icons.school_outlined, "Formations",
+                      Routes.FORMATIONS),
+                  _menuItem(controller, 21, Icons.credit_card_outlined,
+                      "Abonnements", Routes.PROFESSIONAL_SUBSCRIPTIONS),
+                  _menuItem(controller, 22, Icons.person_outline, "Mon profil",
+                      Routes.USERS),
+                  const SizedBox(height: 24),
+
+                  /// ASSOCIATION Section
+                  const Text("ASSOCIATION",
+                      style: TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1)),
+                  const SizedBox(height: 12),
+                  _menuItem(controller, 23, Icons.school_outlined, "Formations",
+                      Routes.FORMATIONS),
+                  _menuItem(controller, 24, Icons.people_outline, "Membres",
+                      Routes.TEACHER_STUDENTS),
+                  _menuItem(controller, 25, Icons.bar_chart_outlined,
+                      "Budget & Utilisation", Routes.ASSOCIATIONS),
                 ],
               ),
             ),

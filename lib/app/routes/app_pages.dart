@@ -2,6 +2,8 @@ import 'package:flutter_getx_app/app/modules/home/contollers/equipment_controlle
 import 'package:flutter_getx_app/app/modules/home/contollers/course_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/user_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/training_sessions_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/professional_formations_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/reservations_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/associations_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/teacher_students_controller.dart';
 import 'package:flutter_getx_app/controllers/assignments_controller.dart';
@@ -13,6 +15,7 @@ import 'package:flutter_getx_app/app/modules/home/contollers/views/home_view.dar
 import 'package:flutter_getx_app/app/modules/home/contollers/views/reservations_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/associations_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/payments_view.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/professional_subscriptions_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/teacher_students_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/user_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/sessions_view.dart';
@@ -81,8 +84,9 @@ class AppPages {
     ),
     GetPage(
       name: Routes.RESERVATIONS,
-      page: () => ReservationsView(),
+      page: () => const ReservationsView(),
       binding: BindingsBuilder(() {
+        Get.lazyPut(() => ReservationsController(), fenix: true);
         Get.put(HomeController(), permanent: true);
       }),
     ),
@@ -109,6 +113,13 @@ class AppPages {
       }),
     ),
     GetPage(
+      name: Routes.PROFESSIONAL_SUBSCRIPTIONS,
+      page: () => const ProfessionalSubscriptionsView(),
+      binding: BindingsBuilder(() {
+        Get.put(HomeController(), permanent: true);
+      }),
+    ),
+    GetPage(
       name: Routes.USERS,
       page: () => UserView(),
       binding: BindingsBuilder(() {
@@ -121,6 +132,10 @@ class AppPages {
       binding: BindingsBuilder(() {
         Get.put(HomeController(), permanent: true);
         Get.put(CourseController(), permanent: true);
+        Get.lazyPut<ProfessionalFormationsController>(
+          () => ProfessionalFormationsController(),
+          fenix: true,
+        );
       }),
     ),
     GetPage(

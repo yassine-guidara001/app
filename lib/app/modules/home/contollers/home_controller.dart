@@ -17,6 +17,12 @@ class HomeController extends GetxController {
     14, // Étudiant - Mes devoirs
     15, // Étudiant - Catalogue Cours
     17, // Étudiant - Sessions
+    20, // Professionnel - Formations
+    21, // Professionnel - Abonnements
+    22, // Professionnel - Mon profil
+    23, // Association - Formations
+    24, // Association - Membres
+    25, // Association - Budget & Utilisation
   };
 
   final AuthService _authService = Get.find<AuthService>();
@@ -42,7 +48,9 @@ class HomeController extends GetxController {
       return;
     }
 
-    Get.toNamed(route);
+    if (Get.currentRoute != route) {
+      Get.toNamed(route);
+    }
   }
 
   Future<void> _syncCurrentUserForSidebarSection() async {

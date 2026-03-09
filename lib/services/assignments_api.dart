@@ -609,6 +609,53 @@ class AssignmentsApi {
         .toList();
   }
 
+  List<Map<String, dynamic>> _parseSubmissionsList(String body) {
+    final decoded = _decodeMap(body);
+    final data = decoded['data'];
+    if (data is! List) {
+      return const <Map<String, dynamic>>[];
+    }
+
+    return data
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
+  int? _extractSubmissionAssignmentId(Map<String, dynamic> submission) {
+    final node = _extractContentNode(submission);
+    final assignmentNode = node['assignment'];
+
+    if (assignmentNode is int) return assignmentNode;
+    if (assignmentNode is num) return assignmentNode.toInt();
+
+    if (assignmentNode is Map<String, dynamic>) {
+      final assignmentData = _extractContentNode(assignmentNode);
+      return _toIntNullable(assignmentData['id']);
+    }
+
+    return _toIntNullable(assignmentNode);
+  }
+
+  Map<String, dynamic> _extractContentNode(Map<String, dynamic> json) {
+    if (json.containsKey('data')) {
+      final nested = json['data'];
+      if (nested is Map<String, dynamic>) {
+        return _extractContentNode(nested);
+      }
+    }
+
+    final attributes = json['attributes'];
+    if (attributes is Map<String, dynamic>) {
+      return {
+        'id': json['id'] ?? attributes['id'],
+        ...attributes,
+      };
+    }
+
+    return json;
+  }
+
   Uint8List? _extractFileBytes(dynamic file) {
     if (file is Map<String, dynamic>) {
       final dynamic bytes = file['bytes'];
@@ -687,6 +734,94 @@ class AssignmentsApi {
     }
 
     return const <Map<String, dynamic>>[];
+  }
+
+  /// Récupère les submissions de l'étudiant courant et les regroupe par devoir.
+  Future<Map<int, List<Map<String, dynamic>>>>
+      getStudentSubmissionsByAssignment({Set<int>? assignmentIds}) async {
+    final userId = _authService.currentUserId;
+
+    if (userId == null) {
+      debugPrint(
+          '[AssignmentsAPI] Aucun userId trouvé pour récupérer les submissions étudiant');
+      return const <int, List<Map<String, dynamic>>>{};
+    }
+
+    final baseUri = Uri.parse(
+      '$_baseApiUrl/submissions?filters[student][id][\$eq]=$userId&populate=assignment',
+    );
+
+    final firstPageUri = _withPagination(baseUri, page: 1, pageSize: 100);
+
+    debugPrint('[AssignmentsAPI] GET $firstPageUri');
+
+    final firstResponse = await http
+        .get(firstPageUri, headers: _authService.authHeaders)
+        .timeout(_requestTimeout);
+    _logResponse(firstResponse);
+
+    if (firstResponse.statusCode == 404) {
+      return const <int, List<Map<String, dynamic>>>{};
+    }
+
+    if (firstResponse.statusCode < 200 || firstResponse.statusCode >= 300) {
+      _throwIfError(firstResponse);
+      return const <int, List<Map<String, dynamic>>>{};
+    }
+
+    final submissions = <Map<String, dynamic>>[];
+    submissions.addAll(_parseSubmissionsList(firstResponse.body));
+
+    final pageInfo = _extractPaginationInfo(firstResponse.body);
+    if (pageInfo != null && pageInfo.pageCount > pageInfo.page) {
+      for (var page = pageInfo.page + 1; page <= pageInfo.pageCount; page++) {
+        final pageUri = _withPagination(
+          baseUri,
+          page: page,
+          pageSize: pageInfo.pageSize,
+        );
+
+        debugPrint('[AssignmentsAPI] GET $pageUri');
+
+        final response = await http
+            .get(pageUri, headers: _authService.authHeaders)
+            .timeout(_requestTimeout);
+        _logResponse(response);
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          submissions.addAll(_parseSubmissionsList(response.body));
+          continue;
+        }
+
+        if (response.statusCode == 404 ||
+            response.statusCode == 400 ||
+            response.statusCode == 422) {
+          break;
+        }
+
+        _throwIfError(response);
+      }
+    }
+
+    final grouped = <int, List<Map<String, dynamic>>>{};
+    final filterIds = assignmentIds ?? const <int>{};
+    final shouldFilter = filterIds.isNotEmpty;
+
+    for (final submission in submissions) {
+      final assignmentId = _extractSubmissionAssignmentId(submission);
+      if (assignmentId == null || assignmentId <= 0) {
+        continue;
+      }
+
+      if (shouldFilter && !filterIds.contains(assignmentId)) {
+        continue;
+      }
+
+      grouped.putIfAbsent(assignmentId, () => <Map<String, dynamic>>[]);
+      grouped[assignmentId]!.add(submission);
+    }
+
+    return grouped;
   }
 
   /// Récupère les IDs des cours auxquels l'étudiant est inscrit via les enrollments
