@@ -521,8 +521,7 @@ class _AssociationFormationsPageState extends State<AssociationFormationsPage> {
   void _showSessionDialog(BuildContext context) {
     final sessionTitleController = TextEditingController();
     final maxParticipantsController = TextEditingController(text: '20');
-    final meetingLinkController =
-        TextEditingController(text: 'https://zoom.us/...');
+    final meetingLinkController = TextEditingController();
     final notesController = TextEditingController();
 
     DateTime? startDate;
@@ -856,7 +855,7 @@ class _AssociationFormationsPageState extends State<AssociationFormationsPage> {
                       TextField(
                         controller: meetingLinkController,
                         decoration: _associationInputDecoration(
-                          'https://zoom.us/...',
+                          'https://zoom.us/j/1234567890',
                           prefixIcon: const Icon(
                             Icons.link,
                             size: 14,
@@ -913,6 +912,41 @@ class _AssociationFormationsPageState extends State<AssociationFormationsPage> {
                                             maxParticipantsController.text) ??
                                         20;
 
+                                    if (maxParticipants <= 0) {
+                                      _showSnack(
+                                          'Le nombre de participants doit etre superieur a 0');
+                                      return;
+                                    }
+
+                                    if (startDate == null || endDate == null) {
+                                      _showSnack(
+                                          'Les dates de debut et de fin sont obligatoires');
+                                      return;
+                                    }
+
+                                    if (!endDate!.isAfter(startDate!)) {
+                                      _showSnack(
+                                          'La date de fin doit etre apres la date de debut');
+                                      return;
+                                    }
+
+                                    final meetingLinkRaw =
+                                        meetingLinkController.text.trim();
+                                    String? meetingLink;
+                                    if (meetingLinkRaw.isNotEmpty) {
+                                      final uri = Uri.tryParse(meetingLinkRaw);
+                                      final isValidMeetingLink = uri != null &&
+                                          (uri.scheme == 'http' ||
+                                              uri.scheme == 'https') &&
+                                          uri.host.isNotEmpty;
+                                      if (!isValidMeetingLink) {
+                                        _showSnack(
+                                            'Lien de reunion invalide (http/https requis)');
+                                        return;
+                                      }
+                                      meetingLink = meetingLinkRaw;
+                                    }
+
                                     setDialogState(() {
                                       isSaving = true;
                                     });
@@ -940,11 +974,7 @@ class _AssociationFormationsPageState extends State<AssociationFormationsPage> {
                                         maxParticipants: maxParticipants,
                                         startDate: startDate,
                                         endDate: endDate,
-                                        meetingLink: meetingLinkController.text
-                                                .trim()
-                                                .isEmpty
-                                            ? null
-                                            : meetingLinkController.text.trim(),
+                                        meetingLink: meetingLink,
                                         notes: payloadNotes,
                                         status: SessionStatus.planned,
                                         participants: const [],

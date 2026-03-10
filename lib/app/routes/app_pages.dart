@@ -12,6 +12,7 @@ import 'package:flutter_getx_app/app/data/services/associations_service.dart';
 import 'package:flutter_getx_app/app/data/services/teacher_students_service.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/equipments_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/courses_view.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/dashboard_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/home_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/my_reservations_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/reservations_view.dart';
@@ -20,6 +21,7 @@ import 'package:flutter_getx_app/app/modules/home/contollers/views/payments_view
 import 'package:flutter_getx_app/app/modules/home/contollers/views/professional_profile_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/professional_subscriptions_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/teacher_students_view.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/association_members_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/user_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/sessions_view.dart';
 import 'package:flutter_getx_app/views/assignments/assignments_list_page.dart';
@@ -47,7 +49,7 @@ class AppPages {
     // Dashboard Home / Utilisateurs
     GetPage(
       name: Routes.HOME,
-      page: () => HomeView(),
+      page: () => const DashboardView(),
       binding: BindingsBuilder(() {
         Get.put(HomeController(), permanent: true);
       }),
@@ -184,6 +186,13 @@ class AppPages {
           () => TeacherStudentsController(),
           fenix: true,
         );
+      }),
+    ),
+    GetPage(
+      name: Routes.ASSOCIATION_MEMBERS,
+      page: () => const AssociationMembersView(),
+      binding: BindingsBuilder(() {
+        Get.put(HomeController(), permanent: true);
       }),
     ),
     GetPage(

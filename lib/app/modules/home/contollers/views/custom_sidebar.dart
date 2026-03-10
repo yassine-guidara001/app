@@ -110,7 +110,7 @@ class CustomSidebar extends StatelessWidget {
                     _menuItem(controller, 23, Icons.school_outlined,
                         'Formations', Routes.FORMATIONS, isCollapsed),
                     _menuItem(controller, 24, Icons.people_outline, 'Membres',
-                        Routes.TEACHER_STUDENTS, isCollapsed),
+                        Routes.ASSOCIATION_MEMBERS, isCollapsed),
                     _menuItem(
                         controller,
                         25,

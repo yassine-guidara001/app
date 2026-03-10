@@ -27,8 +27,8 @@ class ProfessionalSubscriptionsView extends StatelessWidget {
 
   Widget _buildTopBar() {
     return Container(
-      height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
@@ -40,7 +40,10 @@ class ProfessionalSubscriptionsView extends StatelessWidget {
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Rechercher...',
-                hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF9CA3AF),
+                  fontSize: 12,
+                ),
                 isDense: true,
                 filled: true,
                 fillColor: const Color(0xFFF8FAFC),
@@ -51,6 +54,7 @@ class ProfessionalSubscriptionsView extends StatelessWidget {
                   borderSide: BorderSide.none,
                 ),
               ),
+              style: const TextStyle(fontSize: 12),
             ),
           ),
           const Spacer(),
@@ -59,6 +63,7 @@ class ProfessionalSubscriptionsView extends StatelessWidget {
             icon: const Icon(Icons.notifications_none,
                 color: Color(0xFF475569), size: 20),
           ),
+          const SizedBox(width: 10),
           const CircleAvatar(
             radius: 14,
             backgroundColor: Color(0xFFE2E8F0),
@@ -67,7 +72,7 @@ class ProfessionalSubscriptionsView extends StatelessWidget {
           const SizedBox(width: 8),
           const Text(
             'intern',
-            style: TextStyle(fontWeight: FontWeight.w500),
+            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
           ),
         ],
       ),

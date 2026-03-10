@@ -21,6 +21,7 @@ abstract class Routes {
   static const SESSIONS = '/sessions';
   static const DEVOIRS = '/devoirs';
   static const TEACHER_STUDENTS = '/teacher-students';
+  static const ASSOCIATION_MEMBERS = '/association-members';
   static const COMMUNICATION = '/communication';
   static const CREATE_SPACE = '/create-space';
   static const STUDENT_SPACES = '/student-spaces';

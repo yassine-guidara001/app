@@ -19,7 +19,7 @@ extension SessionTypeX on SessionType {
   String get apiValue {
     switch (this) {
       case SessionType.online:
-        return 'En ligne';
+        return 'En_ligne';
       case SessionType.presential:
         return 'Présentiel';
       case SessionType.hybrid:

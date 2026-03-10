@@ -105,6 +105,10 @@ class TrainingSessionsApi {
 
   Future<TrainingSession> createSession(TrainingSession session) async {
     final data = _sanitizePayload(session.toStrapiData());
+    final currentUserId = _authService.currentUserId;
+    if (currentUserId != null && currentUserId > 0) {
+      data['instructor'] = currentUserId;
+    }
     final response = await _post(
       '/training-sessions',
       {'data': data},

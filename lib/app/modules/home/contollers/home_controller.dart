@@ -23,13 +23,12 @@ class HomeController extends GetxController {
     21, // Professionnel - Abonnements
     22, // Professionnel - Mon profil
     23, // Association - Formations
-    24, // Association - Membres
     25, // Association - Budget & Utilisation
   };
 
   final AuthService _authService = Get.find<AuthService>();
 
-  final selectedMenu = 5.obs; // utilisateurs selected par défaut
+  final selectedMenu = 0.obs; // dashboard selected par defaut
   final isSidebarCollapsed = false.obs;
 
   void toggleSidebarCollapse() {

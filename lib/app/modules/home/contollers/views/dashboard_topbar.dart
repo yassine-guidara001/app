@@ -61,11 +61,11 @@ class DashboardTopBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           const Text(
-            'intern',
+            'Intern',
             style: TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.w500,
-              ),
+            ),
           ),
         ],
       ),

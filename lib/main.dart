@@ -44,6 +44,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final storageService = Get.find<StorageService>();
+    final initialRoute =
+        storageService.isLoggedIn() ? Routes.HOME : Routes.LOGIN;
+
     return GetMaterialApp(
       title: 'SUNSPACE - Coworking & Learning Management',
       debugShowCheckedModeBanner: false,
@@ -51,7 +55,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: _appTextTheme,
       ),
-      initialRoute: Routes.LOGIN,
+      initialRoute: initialRoute,
       getPages: AppPages.routes,
     );
   }
