@@ -1,4 +1,6 @@
 import 'package:flutter_getx_app/app/core/service/auth_service.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/professional_profile_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/reservations_controller.dart';
 import 'package:flutter_getx_app/app/modules/spaces/controllers/spaces_controller.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
 import 'package:get/get.dart';
@@ -28,6 +30,15 @@ class HomeController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
 
   final selectedMenu = 5.obs; // utilisateurs selected par défaut
+  final isSidebarCollapsed = false.obs;
+
+  void toggleSidebarCollapse() {
+    isSidebarCollapsed.value = !isSidebarCollapsed.value;
+  }
+
+  void setSidebarCollapsed(bool value) {
+    isSidebarCollapsed.value = value;
+  }
 
   void changeMenu(int index, String route) {
     selectedMenu.value = index;
@@ -48,6 +59,22 @@ class HomeController extends GetxController {
       return;
     }
 
+    // Force /users/me sync each time Profile menu is clicked.
+    if (route == Routes.PROFILE) {
+      _syncCurrentUserForProfileMenu();
+
+      if (Get.isRegistered<ProfessionalProfileController>()) {
+        Get.find<ProfessionalProfileController>().loadProfile();
+      }
+    }
+
+    // Keep reservations pages in sync with backend on each menu click.
+    if (route == Routes.MY_RESERVATIONS || route == Routes.RESERVATIONS) {
+      if (Get.isRegistered<ReservationsController>()) {
+        Get.find<ReservationsController>().loadReservations();
+      }
+    }
+
     if (Get.currentRoute != route) {
       Get.toNamed(route);
     }
@@ -58,6 +85,14 @@ class HomeController extends GetxController {
       await _authService.syncCurrentUserProfile();
     } catch (_) {
       // Ignore sync errors here so sidebar navigation stays responsive.
+    }
+  }
+
+  Future<void> _syncCurrentUserForProfileMenu() async {
+    try {
+      await _authService.syncCurrentUserProfile(force: true);
+    } catch (_) {
+      // Ignore sync errors here so profile navigation remains responsive.
     }
   }
 

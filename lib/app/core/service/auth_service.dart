@@ -109,6 +109,41 @@ class AuthService extends GetxService {
     return profile;
   }
 
+  Future<Map<String, dynamic>> updateUserById({
+    required int userId,
+    required Map<String, dynamic> payload,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$_baseApiUrl/users/$userId'),
+      headers: authHeaders,
+      body: jsonEncode(payload),
+    );
+
+    final decoded = _decodeBody(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(_statusMessage(response.statusCode, decoded));
+    }
+
+    Map<String, dynamic> updated;
+    final cached = _storage.getUserData() ?? <String, dynamic>{};
+    final raw = decoded['data'] ?? decoded;
+    if (raw is Map) {
+      updated = Map<String, dynamic>.from(cached)
+        ..addAll(Map<String, dynamic>.from(raw));
+    } else {
+      updated = Map<String, dynamic>.from(cached)..addAll(payload);
+    }
+
+    await _storage.saveUserData(updated);
+    await _storage.write('user_data', updated);
+    await _storage.write('user', updated);
+
+    _cachedProfile = Map<String, dynamic>.from(updated);
+    _lastProfileSyncAt = DateTime.now();
+
+    return updated;
+  }
+
   Future<String> login({
     required String identifier,
     required String password,

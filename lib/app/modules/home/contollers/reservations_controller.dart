@@ -4,9 +4,11 @@ import 'package:get/get.dart';
 class ReservationsController extends GetxController {
   final ReservationsService _service = ReservationsService();
 
+  final allReservations = <ReservationModel>[].obs;
   final reservations = <ReservationModel>[].obs;
   final isLoading = false.obs;
-  final selectedStatus = 'En attente'.obs;
+  final selectedStatus = 'Tous'.obs;
+  final searchQuery = ''.obs;
 
   @override
   void onInit() {
@@ -21,17 +23,11 @@ class ReservationsController extends GetxController {
       final result = await _service.getReservations();
 
       final List<dynamic> data = result['data'] ?? [];
-      final allReservations =
+      final fetchedReservations =
           data.map((json) => ReservationModel.fromJson(json)).toList();
 
-      if (selectedStatus.value == 'Tous') {
-        reservations.value = allReservations;
-      } else {
-        final selected = _normalizeStatus(selectedStatus.value);
-        reservations.value = allReservations
-            .where((item) => _normalizeStatus(item.status) == selected)
-            .toList();
-      }
+      allReservations.assignAll(fetchedReservations);
+      _applyFilters();
     } catch (e) {
       Get.snackbar(
         'Erreur',
@@ -81,7 +77,48 @@ class ReservationsController extends GetxController {
 
   void changeStatusFilter(String status) {
     selectedStatus.value = status;
-    loadReservations();
+    _applyFilters();
+  }
+
+  void setSearchQuery(String value) {
+    searchQuery.value = value;
+    _applyFilters();
+  }
+
+  int get totalCount => allReservations.length;
+
+  int get confirmedCount => allReservations
+      .where((item) => _normalizeStatus(item.status) == 'confirmé')
+      .length;
+
+  int get pendingCount => allReservations
+      .where((item) => _normalizeStatus(item.status) == 'en attente')
+      .length;
+
+  List<ReservationModel> get upcomingReservations {
+    final now = DateTime.now();
+    final upcoming = reservations.where((item) => item.dateTime.isAfter(now));
+    final sorted = upcoming.toList()
+      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    return sorted;
+  }
+
+  void _applyFilters() {
+    final selected = _normalizeStatus(selectedStatus.value);
+    final query = searchQuery.value.trim().toLowerCase();
+
+    final filtered = allReservations.where((item) {
+      final statusMatches = selectedStatus.value == 'Tous' ||
+          _normalizeStatus(item.status) == selected;
+
+      final searchMatches = query.isEmpty ||
+          item.spaceName.toLowerCase().contains(query) ||
+          item.userName.toLowerCase().contains(query);
+
+      return statusMatches && searchMatches;
+    }).toList();
+
+    reservations.assignAll(filtered);
   }
 
   String _normalizeStatus(String value) {

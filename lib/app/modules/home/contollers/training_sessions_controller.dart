@@ -267,7 +267,10 @@ class TrainingSessionsController extends GetxController {
     if (!confirmed) return;
 
     try {
-      await _api.deleteSession(session.id);
+      await _api.deleteSession(
+        id: session.id,
+        documentId: session.documentId,
+      );
       sessions.removeWhere((item) => item.id == session.id);
       await refreshSessionsFromServer(withLoader: false);
       Get.snackbar('Succès', 'Session supprimée');

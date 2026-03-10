@@ -3,6 +3,7 @@ import 'package:flutter_getx_app/app/modules/home/contollers/course_controller.d
 import 'package:flutter_getx_app/app/modules/home/contollers/user_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/training_sessions_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/professional_formations_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/professional_profile_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/reservations_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/associations_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/teacher_students_controller.dart';
@@ -12,9 +13,11 @@ import 'package:flutter_getx_app/app/data/services/teacher_students_service.dart
 import 'package:flutter_getx_app/app/modules/home/contollers/views/equipments_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/courses_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/home_view.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/my_reservations_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/reservations_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/associations_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/payments_view.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/professional_profile_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/professional_subscriptions_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/teacher_students_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/user_view.dart';
@@ -83,6 +86,14 @@ class AppPages {
       }),
     ),
     GetPage(
+      name: Routes.MY_RESERVATIONS,
+      page: () => const MyReservationsView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => ReservationsController(), fenix: true);
+        Get.put(HomeController(), permanent: true);
+      }),
+    ),
+    GetPage(
       name: Routes.RESERVATIONS,
       page: () => const ReservationsView(),
       binding: BindingsBuilder(() {
@@ -117,6 +128,17 @@ class AppPages {
       page: () => const ProfessionalSubscriptionsView(),
       binding: BindingsBuilder(() {
         Get.put(HomeController(), permanent: true);
+      }),
+    ),
+    GetPage(
+      name: Routes.PROFILE,
+      page: () => const ProfessionalProfileView(),
+      binding: BindingsBuilder(() {
+        Get.put(HomeController(), permanent: true);
+        Get.lazyPut<ProfessionalProfileController>(
+          () => ProfessionalProfileController(),
+          fenix: true,
+        );
       }),
     ),
     GetPage(

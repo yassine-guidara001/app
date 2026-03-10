@@ -69,6 +69,33 @@ class TrainingSessionsApi {
     return const [];
   }
 
+  Future<List<TrainingSession>> getSessionsByInstructorId(
+      int instructorId) async {
+    final endpoint =
+        '/training-sessions?filters[instructor][id][\$eq]=$instructorId&populate=*&sort=start_datetime:asc';
+    final response = await _get(endpoint);
+    final decoded = _decodeMap(response.body);
+    final data = decoded['data'];
+
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((item) =>
+              TrainingSession.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+
+    return const [];
+  }
+
+  Future<List<TrainingSession>> getCurrentInstructorSessions() async {
+    final userId = _authService.currentUserId;
+    if (userId == null || userId <= 0) {
+      return const [];
+    }
+    return getSessionsByInstructorId(userId);
+  }
+
   Future<TrainingSession> getSession(dynamic id) async {
     final endpoint =
         '/training-sessions/$id?populate=attendees&populate=course';
@@ -95,8 +122,35 @@ class TrainingSessionsApi {
     return TrainingSession.fromJson(_decodeMap(response.body));
   }
 
-  Future<void> deleteSession(dynamic id) async {
-    await _delete('/training-sessions/$id');
+  Future<void> deleteSession({required int id, String? documentId}) async {
+    final trimmedDocumentId = documentId?.trim() ?? '';
+
+    final candidateEndpoints = <String>[
+      if (trimmedDocumentId.isNotEmpty)
+        '/training-sessions/${Uri.encodeComponent(trimmedDocumentId)}',
+      if (id > 0) '/training-sessions/$id',
+    ];
+
+    if (candidateEndpoints.isEmpty) {
+      throw Exception('DELETE_SESSION Error: identifiant manquant');
+    }
+
+    http.Response? lastResponse;
+
+    for (final endpoint in candidateEndpoints) {
+      try {
+        lastResponse = await _delete(endpoint);
+        return;
+      } catch (_) {
+        // Continue to fallback endpoint if available.
+      }
+    }
+
+    if (lastResponse != null) {
+      _throwIfError(lastResponse);
+    }
+
+    throw Exception('DELETE_SESSION Error: suppression impossible');
   }
 
   Future<TrainingSession> updateSessionAttendees(

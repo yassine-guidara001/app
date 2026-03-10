@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_getx_app/app/data/models/course_model.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/course_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/association_formations_page.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/professional_formations_page.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/student_course_access_page.dart';
@@ -16,6 +17,7 @@ class CoursesView extends GetView<CourseController> {
   static const int _studentMyCoursesMenuIndex = 13;
   static const int _studentCatalogMenuIndex = 15;
   static const int _professionalFormationsMenuIndex = 20;
+  static const int _associationFormationsMenuIndex = 23;
 
   HomeController get _homeController => Get.find<HomeController>();
 
@@ -34,6 +36,8 @@ class CoursesView extends GetView<CourseController> {
               final isStudentCatalog = selectedMenu == _studentCatalogMenuIndex;
               final isProfessionalFormations =
                   selectedMenu == _professionalFormationsMenuIndex;
+              final isAssociationFormations =
+                  selectedMenu == _associationFormationsMenuIndex;
 
               if (isStudentMyCourses) {
                 return _buildStudentMyCoursesView();
@@ -49,6 +53,17 @@ class CoursesView extends GetView<CourseController> {
                     _buildTopBar(),
                     const Expanded(
                       child: ProfessionalFormationsPage(),
+                    ),
+                  ],
+                );
+              }
+
+              if (isAssociationFormations) {
+                return Column(
+                  children: [
+                    _buildTopBar(),
+                    const Expanded(
+                      child: AssociationFormationsPage(),
                     ),
                   ],
                 );
@@ -108,7 +123,7 @@ class CoursesView extends GetView<CourseController> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Retrouvez ici tous les cours auxquels vous êtes inscrit.',
+                  'Retrouvez ici tous les cours auxquels vous ├¬tes inscrit.',
                   style: TextStyle(
                     color: Color(0xFF6B7280),
                   ),
@@ -167,7 +182,7 @@ class CoursesView extends GetView<CourseController> {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'Explorez notre catalogue pour trouver la formation\nqui vous convient et commencez à apprendre dès\naujourd\'hui.',
+                    'Explorez notre catalogue pour trouver la formation\nqui vous convient et commencez ├á apprendre d├¿s\naujourd\'hui.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF6B7280),
@@ -395,7 +410,7 @@ class CoursesView extends GetView<CourseController> {
             ),
             SizedBox(height: 8),
             Text(
-              'Explorez notre vaste sélection de formations pour booster vos compétences.',
+              'Explorez notre vaste s├®lection de formations pour booster vos comp├®tences.',
               style: TextStyle(
                 color: Color(0xFF6B7280),
               ),
@@ -540,7 +555,7 @@ class CoursesView extends GetView<CourseController> {
 
   String _buildCatalogActionLabel(Course course, {required bool isEnrolled}) {
     if (isEnrolled) {
-      return 'Accéder';
+      return 'Acc├®der';
     }
 
     if (course.price <= 0) {
@@ -596,7 +611,7 @@ class CoursesView extends GetView<CourseController> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'PAIEMENT SÉCURISÉ',
+                                  'PAIEMENT S├ëCURIS├ë',
                                   style: TextStyle(
                                     color: Color(0xFF111827),
                                     fontWeight: FontWeight.w900,
@@ -612,7 +627,7 @@ class CoursesView extends GetView<CourseController> {
                                     ),
                                     children: [
                                       const TextSpan(
-                                        text: 'Inscription à la formation : ',
+                                        text: 'Inscription ├á la formation : ',
                                       ),
                                       TextSpan(
                                         text: course.title.toUpperCase(),
@@ -678,7 +693,7 @@ class CoursesView extends GetView<CourseController> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'MONTANT À RÉGLER',
+                                    'MONTANT ├Ç R├ëGLER',
                                     style: TextStyle(
                                       color: Color(0xFF6B7280),
                                       fontWeight: FontWeight.w700,
@@ -806,7 +821,7 @@ class CoursesView extends GetView<CourseController> {
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'NUMÉRO DE CARTE',
+                        'NUM├ëRO DE CARTE',
                         style: TextStyle(
                           color: Color(0xFF6B7280),
                           fontWeight: FontWeight.w700,
@@ -886,8 +901,9 @@ class CoursesView extends GetView<CourseController> {
                                   ],
                                   textAlign: TextAlign.center,
                                   obscureText: true,
-                                  obscuringCharacter: '•',
-                                  decoration: _paymentInputDecoration('•••'),
+                                  obscuringCharacter: 'ÔÇó',
+                                  decoration:
+                                      _paymentInputDecoration('ÔÇóÔÇóÔÇó'),
                                 ),
                               ],
                             ),
@@ -943,7 +959,7 @@ class CoursesView extends GetView<CourseController> {
                             const SizedBox(width: 8),
                             const Expanded(
                               child: Text(
-                                'PAIEMENT CRYPTÉ SSL 256 BITS',
+                                'PAIEMENT CRYPT├ë SSL 256 BITS',
                                 style: TextStyle(
                                   color: Color(0xFF6B7280),
                                   fontWeight: FontWeight.w700,
@@ -1135,7 +1151,7 @@ class CoursesView extends GetView<CourseController> {
             ),
             SizedBox(height: 8),
             Text(
-              'Gérez vos cours, modules et leçons',
+              'G├®rez vos cours, modules et le├ºons',
               style: TextStyle(
                 color: Color(0xFF6B7280),
               ),
@@ -1225,7 +1241,7 @@ class CoursesView extends GetView<CourseController> {
                   Expanded(flex: 2, child: _HeaderCell('Niveau')),
                   Expanded(flex: 2, child: _HeaderCell('Prix')),
                   Expanded(flex: 2, child: _HeaderCell('Statut')),
-                  Expanded(flex: 2, child: _HeaderCell('Créé le')),
+                  Expanded(flex: 2, child: _HeaderCell('Cr├®├® le')),
                   Expanded(flex: 1, child: _HeaderCell('Actions')),
                 ],
               ),
@@ -1235,7 +1251,7 @@ class CoursesView extends GetView<CourseController> {
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 28),
                 child: Text(
-                  'Aucun cours trouvé',
+                  'Aucun cours trouv├®',
                   style: TextStyle(
                     color: Color(0xFF64748B),
                   ),
@@ -1310,7 +1326,7 @@ class CoursesView extends GetView<CourseController> {
   }
 
   Widget _buildStatusBadge(String status) {
-    final isPublished = status.toLowerCase() == 'publié';
+    final isPublished = status.toLowerCase() == 'publi├®';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -1339,7 +1355,7 @@ class CoursesView extends GetView<CourseController> {
         TextEditingController(text: course?.description ?? '');
     final priceController =
         TextEditingController(text: course != null ? '${course.price}' : '0');
-    String selectedLevel = course?.level ?? 'Débutant';
+    String selectedLevel = course?.level ?? 'D├®butant';
     String selectedStatus = course?.status ?? 'Brouillon';
 
     showDialog<void>(
@@ -1361,7 +1377,9 @@ class CoursesView extends GetView<CourseController> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        isEdit ? 'Modifier le cours' : 'Créer un nouveau cours',
+                        isEdit
+                            ? 'Modifier le cours'
+                            : 'Cr├®er un nouveau cours',
                         style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF0F172A),
@@ -1376,7 +1394,7 @@ class CoursesView extends GetView<CourseController> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Remplissez les détails ci-dessous pour enregistrer le cours.',
+                    'Remplissez les d├®tails ci-dessous pour enregistrer le cours.',
                     style: TextStyle(
                       color: Color(0xFF6B7280),
                     ),
@@ -1410,12 +1428,13 @@ class CoursesView extends GetView<CourseController> {
                               value: selectedLevel,
                               items: const [
                                 DropdownMenuItem(
-                                    value: 'Débutant', child: Text('Débutant')),
+                                    value: 'D├®butant',
+                                    child: Text('D├®butant')),
                                 DropdownMenuItem(
-                                    value: 'Intermédiaire',
-                                    child: Text('Intermédiaire')),
+                                    value: 'Interm├®diaire',
+                                    child: Text('Interm├®diaire')),
                                 DropdownMenuItem(
-                                    value: 'Avancé', child: Text('Avancé')),
+                                    value: 'Avanc├®', child: Text('Avanc├®')),
                               ],
                               onChanged: (v) {
                                 if (v != null) {
@@ -1501,7 +1520,7 @@ class CoursesView extends GetView<CourseController> {
                         DropdownMenuItem(
                             value: 'Brouillon', child: Text('Brouillon')),
                         DropdownMenuItem(
-                            value: 'Publié', child: Text('Publié')),
+                            value: 'Publi├®', child: Text('Publi├®')),
                       ],
                       onChanged: (v) {
                         if (v != null) {
@@ -1550,7 +1569,7 @@ class CoursesView extends GetView<CourseController> {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
                         child: Text(
-                          isEdit ? 'Mettre à jour' : 'Créer le cours',
+                          isEdit ? 'Mettre ├á jour' : 'Cr├®er le cours',
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                           ),

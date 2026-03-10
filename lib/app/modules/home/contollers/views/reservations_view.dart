@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/reservations_controller.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+
 import 'custom_sidebar.dart';
+import 'dashboard_topbar.dart';
 
 class ReservationsView extends GetView<ReservationsController> {
   const ReservationsView({super.key});
@@ -11,81 +13,38 @@ class ReservationsView extends GetView<ReservationsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
-      body: Row(
-        children: [
-          const CustomSidebar(),
-          Expanded(
-            child: Column(
-              children: [
-                _buildTopBar(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(),
-                        const SizedBox(height: 24),
-                        _buildSearchAndFilter(),
-                        const SizedBox(height: 20),
-                        _buildReservationsTable(),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final showSidebar = constraints.maxWidth >= 1080;
 
-  Widget _buildTopBar() {
-    return Container(
-      height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 300,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Rechercher...',
-                hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-                isDense: true,
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
+          return Row(
+            children: [
+              if (showSidebar) const CustomSidebar(),
+              Expanded(
+                child: Column(
+                  children: [
+                    const DashboardTopBar(),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 26),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(),
+                            const SizedBox(height: 20),
+                            _buildSearchAndFilter(),
+                            const SizedBox(height: 16),
+                            _buildReservationsTable(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_none,
-                color: Color(0xFF475569), size: 20),
-          ),
-          const CircleAvatar(
-            radius: 14,
-            backgroundColor: Color(0xFFE2E8F0),
-            child: Icon(Icons.person, size: 16, color: Colors.blue),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'intern',
-            style: TextStyle(fontWeight: FontWeight.w500),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -96,26 +55,32 @@ class ReservationsView extends GetView<ReservationsController> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.blue.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            color: const Color(0xFFDBEAFE),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.calendar_today_outlined,
-              size: 24, color: Colors.blue),
+          child: const Icon(
+            Icons.calendar_today_outlined,
+            size: 22,
+            color: Color(0xFF0B6BFF),
+          ),
         ),
         const SizedBox(width: 12),
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Réservations",
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Color(0xFF1E293B))),
-            Text("Gérez toutes les réservations d'espaces",
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                )),
+            Text(
+              'Réservations',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            SizedBox(height: 3),
+            Text(
+              'Gérez toutes les réservations d\'espaces',
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+            ),
           ],
         ),
       ],
@@ -123,47 +88,51 @@ class ReservationsView extends GetView<ReservationsController> {
   }
 
   Widget _buildSearchAndFilter() {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'Rechercher par espace ou utilisateur...',
-              hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-              prefixIcon: const Icon(Icons.search, color: Color(0xFF9CA3AF)),
-              isDense: true,
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 760;
+
+        final searchField = TextField(
+          onChanged: controller.setSearchQuery,
+          decoration: InputDecoration(
+            hintText: 'Rechercher par espace ou utilisateur...',
+            hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+            prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8)),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Obx(
-          () => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: DropdownButton<String>(
+        );
+
+        final statusFilter = Container(
+          width: isNarrow ? double.infinity : null,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Obx(
+            () => DropdownButton<String>(
               value: controller.selectedStatus.value,
+              isExpanded: isNarrow,
               underline: const SizedBox(),
               items: ['Tous', 'En attente', 'Confirmé', 'Annulé']
-                  .map((status) => DropdownMenuItem(
-                        value: status,
-                        child: Text(status),
-                      ))
+                  .map(
+                    (status) => DropdownMenuItem<String>(
+                      value: status,
+                      child: Text(status),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
@@ -172,14 +141,32 @@ class ReservationsView extends GetView<ReservationsController> {
               },
             ),
           ),
-        ),
-      ],
+        );
+
+        if (isNarrow) {
+          return Column(
+            children: [
+              searchField,
+              const SizedBox(height: 10),
+              statusFilter,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: searchField),
+            const SizedBox(width: 10),
+            statusFilter,
+          ],
+        );
+      },
     );
   }
 
   Widget _buildReservationsTable() {
     return Obx(() {
-      if (controller.isLoading.value) {
+      if (controller.isLoading.value && controller.reservations.isEmpty) {
         return const Center(
           child: Padding(
             padding: EdgeInsets.all(40),
@@ -190,21 +177,24 @@ class ReservationsView extends GetView<ReservationsController> {
 
       if (controller.reservations.isEmpty) {
         return Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(40),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: const Center(
             child: Text(
               'Aucune réservation trouvée',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Color(0xFF64748B)),
             ),
           ),
         );
       }
 
       return Container(
+        width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -213,8 +203,8 @@ class ReservationsView extends GetView<ReservationsController> {
         child: Column(
           children: [
             _buildTableHeader(),
-            ...controller.reservations.map((reservation) =>
-                _buildTableRow(reservation)),
+            ...controller.reservations
+                .map((reservation) => _buildTableRow(reservation)),
           ],
         ),
       );
@@ -223,7 +213,7 @@ class ReservationsView extends GetView<ReservationsController> {
 
   Widget _buildTableHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       decoration: const BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.only(
@@ -231,83 +221,66 @@ class ReservationsView extends GetView<ReservationsController> {
           topRight: Radius.circular(12),
         ),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Expanded(
+          Expanded(
             flex: 2,
             child: Text(
               'Espace',
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: Color(0xFF475569),
-              ),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: Color(0xFF475569)),
             ),
           ),
-          const Expanded(
-            flex: 3,
+          Expanded(
+            flex: 2,
             child: Text(
               'Utilisateur',
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: Color(0xFF475569),
-              ),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: Color(0xFF475569)),
             ),
           ),
-          const Expanded(
+          Expanded(
             flex: 2,
             child: Text(
               'Date & Heure',
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: Color(0xFF475569),
-              ),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: Color(0xFF475569)),
             ),
           ),
-          const Expanded(
+          Expanded(
             flex: 1,
             child: Text(
               'Montant',
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: Color(0xFF475569),
-              ),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: Color(0xFF475569)),
             ),
           ),
-          const Expanded(
+          Expanded(
             flex: 1,
             child: Text(
               'Statut',
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: Color(0xFF475569),
-              ),
-            ),
-          ),
-          const Expanded(
-            flex: 1,
-            child: Text(
-              'Paiement',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: Color(0xFF475569),
-              ),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: Color(0xFF475569)),
             ),
           ),
           SizedBox(
-            width: 100,
-            child: const Text(
+            width: 92,
+            child: Text(
               'Actions',
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: Color(0xFF475569),
-              ),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: Color(0xFF475569)),
             ),
           ),
         ],
@@ -317,11 +290,9 @@ class ReservationsView extends GetView<ReservationsController> {
 
   Widget _buildTableRow(ReservationModel reservation) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       child: Row(
         children: [
@@ -331,107 +302,15 @@ class ReservationsView extends GetView<ReservationsController> {
               reservation.spaceName,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 13,
                 color: Color(0xFF0F172A),
               ),
             ),
           ),
           Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: _getAvatarColor(reservation.userName),
-                  child: Text(
-                    reservation.userName.isNotEmpty
-                        ? reservation.userName[0].toUpperCase()
-                        : 'U',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            reservation.userName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          if (reservation.userType != null) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEF3C7),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                reservation.userType!,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFB45309),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      if (reservation.userEmail.isNotEmpty)
-                        Text(
-                          reservation.userEmail,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF64748B),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
             flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  DateFormat('dd MMM. yyyy', 'fr_FR').format(reservation.dateTime),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                Text(
-                  DateFormat('HH:mm').format(reservation.dateTime),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 1,
             child: Text(
-              '${reservation.amount.toInt()} DT',
+              reservation.userName,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
@@ -440,84 +319,55 @@ class ReservationsView extends GetView<ReservationsController> {
             ),
           ),
           Expanded(
-            flex: 1,
-            child: _buildStatusBadge(reservation.status),
+            flex: 2,
+            child: Text(
+              DateFormat('dd/MM/yyyy HH:mm').format(reservation.dateTime),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF475569)),
+            ),
           ),
           Expanded(
             flex: 1,
-            child: reservation.paymentMethod != null
-                ? Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDCFCE7),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      reservation.paymentMethod!.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF16A34A),
-                      ),
-                    ),
-                  )
-                : const Text(
-                    '-',
-                    style: TextStyle(color: Color(0xFF94A3B8)),
-                  ),
+            child: Text(
+              '${reservation.amount.toStringAsFixed(0)} DT',
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: _buildStatusBadge(reservation.status),
           ),
           SizedBox(
-            width: 100,
+            width: 92,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 InkWell(
-                  onTap: () => controller.updateStatus(
-                      reservation.id, 'confirmé'),
+                  onTap: () =>
+                      controller.updateStatus(reservation.id, 'confirmé'),
                   child: Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
                       color: const Color(0xFFDCFCE7),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: Color(0xFF16A34A),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                InkWell(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDEEDFF),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      size: 16,
-                      color: Color(0xFF0B6BFF),
-                    ),
+                    child: const Icon(Icons.check,
+                        size: 16, color: Color(0xFF16A34A)),
                   ),
                 ),
                 const SizedBox(width: 6),
                 InkWell(
                   onTap: () => controller.deleteReservation(reservation.id),
                   child: Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEE2E2),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Icon(
-                      Icons.delete_outline,
-                      size: 16,
-                      color: Color(0xFFDC2626),
-                    ),
+                    child: const Icon(Icons.delete_outline,
+                        size: 16, color: Color(0xFFDC2626)),
                   ),
                 ),
               ],
@@ -529,44 +379,40 @@ class ReservationsView extends GetView<ReservationsController> {
   }
 
   Widget _buildStatusBadge(String status) {
-    final statusLower = status.toLowerCase().replaceAll('_', ' ');
-    Color bgColor;
-    Color textColor;
-    String label;
+    final statusLower = status.toLowerCase().replaceAll('_', ' ').trim();
 
-    switch (statusLower) {
-      case 'en attente':
-      case 'en_attente':
-        bgColor = const Color(0xFFFEF3C7);
-        textColor = const Color(0xFFB45309);
-        label = 'EN ATTENTE';
-        break;
-      case 'confirmé':
-      case 'confirme':
-        bgColor = const Color(0xFFDCFCE7);
-        textColor = const Color(0xFF16A34A);
-        label = 'CONFIRMÉ';
-        break;
-      case 'annulé':
-      case 'annule':
-        bgColor = const Color(0xFFFEE2E2);
-        textColor = const Color(0xFFDC2626);
-        label = 'ANNULÉ';
-        break;
-      default:
-        bgColor = const Color(0xFFF1F5F9);
-        textColor = const Color(0xFF64748B);
-        label = status.toUpperCase();
+    if (statusLower == 'confirmé' || statusLower == 'confirme') {
+      return _statusChip(
+        'CONFIRMÉ',
+        bgColor: const Color(0xFFDCFCE7),
+        textColor: const Color(0xFF16A34A),
+      );
+    }
+    if (statusLower == 'annulé' || statusLower == 'annule') {
+      return _statusChip(
+        'ANNULÉ',
+        bgColor: const Color(0xFFFEE2E2),
+        textColor: const Color(0xFFDC2626),
+      );
     }
 
+    return _statusChip(
+      'EN ATTENTE',
+      bgColor: const Color(0xFFFEF3C7),
+      textColor: const Color(0xFFB45309),
+    );
+  }
+
+  Widget _statusChip(String text,
+      {required Color bgColor, required Color textColor}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        label,
+        text,
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
@@ -574,18 +420,5 @@ class ReservationsView extends GetView<ReservationsController> {
         ),
       ),
     );
-  }
-
-  Color _getAvatarColor(String name) {
-    final colors = [
-      const Color(0xFFEF4444),
-      const Color(0xFF3B82F6),
-      const Color(0xFF10B981),
-      const Color(0xFFF59E0B),
-      const Color(0xFF8B5CF6),
-      const Color(0xFFEC4899),
-    ];
-    final index = name.isNotEmpty ? name.codeUnitAt(0) % colors.length : 0;
-    return colors[index];
   }
 }
