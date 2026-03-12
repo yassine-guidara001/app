@@ -86,11 +86,30 @@ class DashboardView extends GetView<HomeController> {
   ];
 
   static const List<_QuickActionData> _quickActions = <_QuickActionData>[
-    _QuickActionData(label: 'Espaces', icon: Icons.apartment_outlined),
-    _QuickActionData(label: 'Utilisateurs', icon: Icons.group_outlined),
     _QuickActionData(
-        label: 'Réservations', icon: Icons.calendar_today_outlined),
-    _QuickActionData(label: 'Système', icon: Icons.settings_outlined),
+      label: 'Espaces',
+      icon: Icons.apartment_outlined,
+      menuIndex: 3,
+      route: Routes.SPACES,
+    ),
+    _QuickActionData(
+      label: 'Utilisateurs',
+      icon: Icons.group_outlined,
+      menuIndex: 5,
+      route: Routes.USERS,
+    ),
+    _QuickActionData(
+      label: 'Réservations',
+      icon: Icons.calendar_today_outlined,
+      menuIndex: 6,
+      route: Routes.RESERVATIONS,
+    ),
+    _QuickActionData(
+      label: 'Système',
+      icon: Icons.settings_outlined,
+      menuIndex: 25,
+      route: Routes.ASSOCIATIONS,
+    ),
   ];
 
   @override
@@ -419,7 +438,9 @@ class DashboardView extends GetView<HomeController> {
             return QuickActionButton(
               label: action.label,
               icon: action.icon,
-              onTap: () {},
+              onTap: () {
+                controller.changeMenu(action.menuIndex, action.route);
+              },
             );
           },
         ),
@@ -865,8 +886,15 @@ class _PopularCourseData {
 }
 
 class _QuickActionData {
-  const _QuickActionData({required this.label, required this.icon});
+  const _QuickActionData({
+    required this.label,
+    required this.icon,
+    required this.menuIndex,
+    required this.route,
+  });
 
   final String label;
   final IconData icon;
+  final int menuIndex;
+  final String route;
 }

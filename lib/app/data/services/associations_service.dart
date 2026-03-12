@@ -13,6 +13,38 @@ class AssociationsService {
   AssociationsService({AuthService? authService})
       : _authService = authService ?? Get.find<AuthService>();
 
+  /// Charge les associations dont l'utilisateur est admin OU membre.
+  /// Correspond aux deux requêtes visibles dans les DevTools :
+  ///   GET /associations?filters[admin][id][$eq]={userId}&populate=*
+  ///   GET /associations?filters[members][id][$in]={userId}&populate=*
+  Future<List<AssociationModel>> loadAssociationsByUserId(int userId) async {
+    final headers = _authService.authHeaders;
+
+    final adminUri = Uri.parse(
+      '$_baseApiUrl/associations?filters[admin][id][\$eq]=$userId&populate=*',
+    );
+    final memberUri = Uri.parse(
+      '$_baseApiUrl/associations?filters[members][id][\$in]=$userId&populate=*',
+    );
+
+    final responses = await Future.wait([
+      http.get(adminUri, headers: headers),
+      http.get(memberUri, headers: headers),
+    ]);
+
+    // Fusionne et déduplique par documentId.
+    final seen = <String, AssociationModel>{};
+    for (final response in responses) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        for (final model in _parseAssociations(response.body)) {
+          seen.putIfAbsent(model.documentId, () => model);
+        }
+      }
+    }
+
+    return seen.values.toList();
+  }
+
   Future<AssociationsLoadResult> loadAssociationsAndUsers() async {
     final associationsUri =
         Uri.parse('$_baseApiUrl/associations?populate=*&sort=name:asc');

@@ -1,7 +1,6 @@
 import 'package:flutter_getx_app/app/core/service/auth_service.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/professional_profile_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/reservations_controller.dart';
-import 'package:flutter_getx_app/app/modules/spaces/controllers/spaces_controller.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
 import 'package:get/get.dart';
 
@@ -23,7 +22,8 @@ class HomeController extends GetxController {
     21, // Professionnel - Abonnements
     22, // Professionnel - Mon profil
     23, // Association - Formations
-    25, // Association - Budget & Utilisation
+    // 25 retiré : Budget & Utilisation lit l'userId depuis le storage local,
+    // pas besoin de synchro /users/me à chaque clic.
   };
 
   final AuthService _authService = Get.find<AuthService>();
@@ -46,12 +46,9 @@ class HomeController extends GetxController {
       _syncCurrentUserForSidebarSection();
     }
 
-    // Always refresh student spaces list on each menu click.
+    // Keep student spaces navigation silent (no API preload) to match expected
+    // network behavior when opening the floor plan page.
     if (route == Routes.STUDENT_SPACES) {
-      if (Get.isRegistered<SpaceController>()) {
-        Get.find<SpaceController>().loadSpaces(forceRefresh: true);
-      }
-
       if (Get.currentRoute != Routes.STUDENT_SPACES) {
         Get.toNamed(route);
       }

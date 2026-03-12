@@ -22,13 +22,18 @@ import 'package:flutter_getx_app/app/modules/home/contollers/views/professional_
 import 'package:flutter_getx_app/app/modules/home/contollers/views/professional_subscriptions_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/teacher_students_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/association_members_view.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/association_budget_usage_view.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/association_budget_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/settings_controller.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/views/settings_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/user_view.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/sessions_view.dart';
 import 'package:flutter_getx_app/views/assignments/assignments_list_page.dart';
 import 'package:flutter_getx_app/app/modules/spaces/controllers/spaces_controller.dart';
 import 'package:flutter_getx_app/app/modules/spaces/views/spaces_view.dart';
 import 'package:flutter_getx_app/app/modules/spaces/views/create_space_view.dart';
-import 'package:flutter_getx_app/app/modules/spaces/views/student_spaces_view.dart';
+import 'package:flutter_getx_app/app/modules/spaces/views/student_floor_plan_page.dart';
+import 'package:flutter_getx_app/app/modules/reservation/views/reservation_page.dart';
 import 'package:get/get.dart';
 
 // Pages
@@ -44,7 +49,7 @@ class AppPages {
   static final routes = [
     // Auth
     GetPage(name: Routes.LOGIN, page: () => LoginPage()),
-    GetPage(name: Routes.REGISTER, page: () => RegisterPage()),
+    GetPage(name: Routes.REGISTER, page: () => const RegisterPage()),
 
     // Dashboard Home / Utilisateurs
     GetPage(
@@ -73,9 +78,16 @@ class AppPages {
     ),
     GetPage(
       name: Routes.STUDENT_SPACES,
-      page: () => const StudentSpacesView(),
+      page: () => const StudentFloorPlanPage(),
       binding: BindingsBuilder(() {
         Get.lazyPut<SpaceController>(() => SpaceController(), fenix: true);
+        Get.put(HomeController(), permanent: true);
+      }),
+    ),
+    GetPage(
+      name: Routes.RESERVATION_PLAN,
+      page: () => const ReservationPage(),
+      binding: BindingsBuilder(() {
         Get.put(HomeController(), permanent: true);
       }),
     ),
@@ -196,6 +208,21 @@ class AppPages {
       }),
     ),
     GetPage(
+      name: Routes.ASSOCIATION_BUDGET_USAGE,
+      page: () => const AssociationBudgetUsageView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<AssociationsService>(
+          () => AssociationsService(),
+          fenix: true,
+        );
+        Get.lazyPut<AssociationBudgetController>(
+          () => AssociationBudgetController(),
+          fenix: true,
+        );
+        Get.put(HomeController(), permanent: true);
+      }),
+    ),
+    GetPage(
       name: Routes.DEVOIRS,
       page: () => const AssignmentsListPage(),
       binding: BindingsBuilder(() {
@@ -204,6 +231,15 @@ class AppPages {
           () => AssignmentsController(),
           fenix: true,
         );
+      }),
+    ),
+    GetPage(
+      name: Routes.SETTINGS,
+      page: () => const SettingsView(),
+      binding: BindingsBuilder(() {
+        Get.put(HomeController(), permanent: true);
+        Get.lazyPut<SettingsController>(() => SettingsController(),
+            fenix: true);
       }),
     ),
     GetPage(

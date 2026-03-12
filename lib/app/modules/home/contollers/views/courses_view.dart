@@ -555,7 +555,7 @@ class CoursesView extends GetView<CourseController> {
 
   String _buildCatalogActionLabel(Course course, {required bool isEnrolled}) {
     if (isEnrolled) {
-      return 'Acc├®der';
+      return 'Accéder';
     }
 
     if (course.price <= 0) {

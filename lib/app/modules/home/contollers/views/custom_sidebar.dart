@@ -44,7 +44,7 @@ class CustomSidebar extends StatelessWidget {
                         1,
                         Icons.location_on_outlined,
                         'Réserver un espace',
-                        Routes.STUDENT_SPACES,
+                        Routes.RESERVATION_PLAN,
                         isCollapsed),
                     _menuItem(
                         controller,
@@ -116,7 +116,7 @@ class CustomSidebar extends StatelessWidget {
                         25,
                         Icons.bar_chart_outlined,
                         'Budget & Utilisation',
-                        Routes.ASSOCIATIONS,
+                        Routes.ASSOCIATION_BUDGET_USAGE,
                         isCollapsed),
                   ],
                 ),
@@ -239,6 +239,27 @@ class CustomSidebar extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Tooltip(
+            message: 'Paramètres',
+            child: InkWell(
+              onTap: () => Get.toNamed(Routes.SETTINGS),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.settings_outlined,
+                  size: 16,
+                  color: Color(0xFF0B6BFF),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Tooltip(
             message: 'Déconnexion',
             child: InkWell(
               onTap: () => Get.offAllNamed(Routes.LOGIN),
@@ -270,9 +291,9 @@ class CustomSidebar extends StatelessWidget {
             color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 16,
                 backgroundColor: Color(0xFFDDEAFE),
                 child: Text(
@@ -283,8 +304,8 @@ class CustomSidebar extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 8),
-              Expanded(
+              const SizedBox(width: 8),
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -297,6 +318,26 @@ class CustomSidebar extends StatelessWidget {
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ],
+                ),
+              ),
+              Tooltip(
+                message: 'Paramètres',
+                child: InkWell(
+                  onTap: () => Get.toNamed(Routes.SETTINGS),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.settings_outlined,
+                      size: 16,
+                      color: Color(0xFF0B6BFF),
+                    ),
+                  ),
                 ),
               ),
             ],
