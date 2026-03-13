@@ -33,4 +33,5 @@ abstract class Routes {
   static const USER_DETAILS = '/user-details';
   static const SETTINGS = '/settings';
   static const ABOUT = '/about';
+  static const PLAN = '/plan';
 }

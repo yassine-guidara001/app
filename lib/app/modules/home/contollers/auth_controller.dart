@@ -1,5 +1,6 @@
 import 'package:flutter_getx_app/app/core/service/http_service.dart';
 import 'package:flutter_getx_app/app/core/service/storage_service.dart';
+import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
 
@@ -90,6 +91,9 @@ class AuthController extends GetxController {
 
         // Sauvegarder le token
         await storageService.saveToken(token);
+        if (normalizedIdentifier.contains('@')) {
+          await storageService.write('last_login_email', normalizedIdentifier);
+        }
 
         final user = response.body['user'];
         if (user != null) {
@@ -99,6 +103,12 @@ class AuthController extends GetxController {
           Get.snackbar('Succès', 'Bienvenue $username');
         } else {
           Get.snackbar('Succès', 'Connexion réussie');
+        }
+
+        if (Get.isRegistered<HomeController>()) {
+          await Get.find<HomeController>().refreshCurrentUserIdentity(
+            force: true,
+          );
         }
 
         Get.offAllNamed(Routes.HOME);
@@ -179,10 +189,17 @@ class AuthController extends GetxController {
 
         // Auto-login: sauvegarder le token
         await storageService.saveToken(token);
+        await storageService.write('last_login_email', email.trim());
 
         final user = response.body['user'];
         if (user != null) {
           await storageService.saveUserData(user);
+        }
+
+        if (Get.isRegistered<HomeController>()) {
+          await Get.find<HomeController>().refreshCurrentUserIdentity(
+            force: true,
+          );
         }
 
         Get.snackbar('Succès', 'Inscription et connexion réussies');

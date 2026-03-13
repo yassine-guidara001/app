@@ -108,14 +108,14 @@ class DashboardView extends GetView<HomeController> {
       label: 'Système',
       icon: Icons.settings_outlined,
       menuIndex: 25,
-      route: Routes.ASSOCIATIONS,
+      route: Routes.SETTINGS,
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFFE8EDF4),
       body: Row(
         children: [
           const CustomSidebar(),
@@ -125,29 +125,14 @@ class DashboardView extends GetView<HomeController> {
                 const DashboardTopBar(),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final double width = constraints.maxWidth;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Tableau de bord',
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Bienvenue intern',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
+                            _buildDashboardHeader(width),
                             const SizedBox(height: 20),
                             _buildStatsGrid(width),
                             const SizedBox(height: 16),
@@ -170,6 +155,92 @@ class DashboardView extends GetView<HomeController> {
     );
   }
 
+  Widget _buildDashboardHeader(double width) {
+    final isCompact = width < 860;
+
+    return Obx(() {
+      final rawName = controller.currentUsername.value.trim();
+      final rawEmail = controller.currentEmail.value.trim();
+
+      var displayName = rawName;
+      if (displayName.isEmpty || displayName.toLowerCase() == 'utilisateur') {
+        displayName = rawEmail;
+      }
+      if (displayName.contains('@')) {
+        displayName = displayName.split('@').first;
+      }
+      if (displayName.isEmpty) {
+        displayName = 'intern';
+      }
+
+      final left = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Tableau de bord',
+            style: TextStyle(
+              fontSize: 38,
+              height: 1.06,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Bienvenue $displayName',
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF334155),
+            ),
+          ),
+        ],
+      );
+
+      final button = SizedBox(
+        height: 38,
+        child: ElevatedButton.icon(
+          onPressed: () => controller.changeMenu(3, Routes.SPACES),
+          icon: const Icon(Icons.library_add_outlined, size: 16),
+          label: const Text('Ajouter un espace'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0B6BFF),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      );
+
+      if (isCompact) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            left,
+            const SizedBox(height: 12),
+            button,
+          ],
+        );
+      }
+
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: left),
+          const SizedBox(width: 12),
+          button,
+        ],
+      );
+    });
+  }
+
   Widget _buildStatsGrid(double width) {
     final int crossAxisCount = width >= 1200
         ? 4
@@ -188,8 +259,8 @@ class DashboardView extends GetView<HomeController> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
         childAspectRatio: childAspectRatio,
       ),
       itemCount: _stats.length,
@@ -242,11 +313,14 @@ class DashboardView extends GetView<HomeController> {
 
   Widget _buildActivitiesCard() {
     return Card(
-      elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.06),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFD4DCE6)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -347,7 +421,7 @@ class DashboardView extends GetView<HomeController> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: controller.openSettings,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: const Color(0xFF1458E0),
@@ -366,9 +440,12 @@ class DashboardView extends GetView<HomeController> {
 
   Widget _buildPopularCoursesCard() {
     return Card(
-      elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.06),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFD4DCE6)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -406,7 +483,7 @@ class DashboardView extends GetView<HomeController> {
             ? 2
             : 1;
 
-    final double aspectRatio = width >= 1200 ? 4.2 : 3.6;
+    final double aspectRatio = width >= 1200 ? 4.4 : 3.9;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,13 +493,13 @@ class DashboardView extends GetView<HomeController> {
           child: Text(
             'Actions rapides',
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
               color: Color(0xFF0F172A),
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -439,6 +516,10 @@ class DashboardView extends GetView<HomeController> {
               label: action.label,
               icon: action.icon,
               onTap: () {
+                if (action.route == Routes.SETTINGS) {
+                  controller.openSettings();
+                  return;
+                }
                 controller.changeMenu(action.menuIndex, action.route);
               },
             );
@@ -453,20 +534,20 @@ class DashboardView extends GetView<HomeController> {
     final Widget revenueCard = const ProgressStatCard(
       title: 'Revenu du mois',
       value: '8 432.50 DT',
-      deltaText: '+12.5%',
+      deltaText: '+8.2%',
       progressValue: 0.70,
       progressColor: Color(0xFF22C55E),
-      helperText: 'Objectif: 12 000 DT',
+      helperText: 'Objectif: 12,000 DT',
       icon: Icons.attach_money_rounded,
     );
 
     final Widget occupancyCard = const ProgressStatCard(
       title: "Taux d'occupation",
       value: '87%',
-      deltaText: '+4.6%',
+      deltaText: '+5.4%',
       progressValue: 0.87,
       progressColor: Color(0xFF2563EB),
-      helperText: 'Capacité: 150 / 180',
+      helperText: 'Capacité: 156 / 180',
       icon: Icons.bar_chart_rounded,
     );
 
@@ -509,11 +590,14 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.05),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFD4DCE6)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
         child: Row(
           children: [
             Expanded(
@@ -522,13 +606,14 @@ class StatCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    title,
+                    title.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Color(0xFF64748B),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF475569),
+                      fontSize: 9,
+                      letterSpacing: 0.7,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -536,18 +621,29 @@ class StatCard extends StatelessWidget {
                     value,
                     style: const TextStyle(
                       color: Color(0xFF0F172A),
-                      fontSize: 24,
+                      fontSize: 33,
+                      height: 1,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Color(0xFF22C55E),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.trending_up_rounded,
+                        size: 12,
+                        color: Color(0xFF22C55E),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: Color(0xFF22C55E),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -556,7 +652,7 @@ class StatCard extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.10),
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: iconColor, size: 18),
@@ -650,27 +746,22 @@ class QuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Ink(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFD4DCE6)),
         ),
-        child: Row(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: const Color(0xFF475569)),
-            const SizedBox(width: 8),
+            Icon(icon, size: 15, color: const Color(0xFF475569)),
+            const SizedBox(height: 5),
             Text(
               label,
               style: const TextStyle(
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF0F172A),
               ),
@@ -705,11 +796,14 @@ class ProgressStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.05),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFD4DCE6)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -719,32 +813,33 @@ class ProgressStatCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF64748B),
+                      fontSize: 14,
+                      color: Color(0xFF0F172A),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                Icon(icon, color: progressColor, size: 18),
+                Icon(icon, color: progressColor, size: 16),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 32,
+                fontSize: 37,
+                height: 1,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF0F172A),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Text(
                   deltaText,
                   style: TextStyle(
                     color: progressColor,
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -753,16 +848,17 @@ class ProgressStatCard extends StatelessWidget {
                   helperText,
                   style: const TextStyle(
                     color: Color(0xFF64748B),
-                    fontSize: 11,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
-                minHeight: 6,
+                minHeight: 4,
                 value: progressValue,
                 backgroundColor: const Color(0xFFE2E8F0),
                 valueColor: AlwaysStoppedAnimation<Color>(progressColor),

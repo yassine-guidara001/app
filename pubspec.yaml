@@ -45,3 +45,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/
+    - assets/plan.svg
+    - assets/plan_clean.svg

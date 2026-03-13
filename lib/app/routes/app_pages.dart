@@ -34,6 +34,7 @@ import 'package:flutter_getx_app/app/modules/spaces/views/spaces_view.dart';
 import 'package:flutter_getx_app/app/modules/spaces/views/create_space_view.dart';
 import 'package:flutter_getx_app/app/modules/spaces/views/student_floor_plan_page.dart';
 import 'package:flutter_getx_app/app/modules/reservation/views/reservation_page.dart';
+import 'package:flutter_getx_app/app/modules/home/modules/plan/views/plan_view.dart';
 import 'package:get/get.dart';
 
 // Pages
@@ -245,6 +246,13 @@ class AppPages {
     GetPage(
       name: Routes.COMMUNICATION,
       page: () => HomeView(),
+      binding: BindingsBuilder(() {
+        Get.put(HomeController(), permanent: true);
+      }),
+    ),
+    GetPage(
+      name: Routes.PLAN,
+      page: () => const PlanView(),
       binding: BindingsBuilder(() {
         Get.put(HomeController(), permanent: true);
       }),

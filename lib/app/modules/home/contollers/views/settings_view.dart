@@ -119,25 +119,118 @@ class SettingsView extends GetView<SettingsController> {
             ],
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: controller.changePassword,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFCBD5E1)),
-                foregroundColor: const Color(0xFF0F172A),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+          Obx(() {
+            if (!controller.isPasswordFormOpen.value) {
+              return SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: controller.changePassword,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    foregroundColor: const Color(0xFF0F172A),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  child: const Text('Changer le mot de passe'),
                 ),
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _PasswordField(
+                  label: 'Mot de passe actuel',
+                  hintText: 'Entrez votre mot de passe actuel',
+                  controller: controller.currentPasswordController,
+                  obscureText: true,
                 ),
-              ),
-              child: const Text('Changer le mot de passe'),
-            ),
-          ),
+                const SizedBox(height: 12),
+                Obx(
+                  () => _PasswordField(
+                    label: 'Nouveau mot de passe',
+                    hintText: 'Entrez votre nouveau mot de passe',
+                    controller: controller.newPasswordController,
+                    obscureText: controller.obscureNewPassword.value,
+                    suffixIcon: IconButton(
+                      onPressed: controller.toggleNewPasswordVisibility,
+                      icon: Icon(
+                        controller.obscureNewPassword.value
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        size: 18,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _PasswordField(
+                  label: 'Confirmer le mot de passe',
+                  hintText: 'Confirmez votre nouveau mot de passe',
+                  controller: controller.confirmPasswordController,
+                  obscureText: true,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Obx(
+                      () => ElevatedButton(
+                        onPressed: controller.isSavingPassword.value
+                            ? null
+                            : controller.savePasswordChange,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0B6BFF),
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: const Color(0xFF93C5FD),
+                          disabledForegroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        child: Text(
+                          controller.isSavingPassword.value
+                              ? 'Enregistrement...'
+                              : 'Enregistrer',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: controller.cancelPasswordChange,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        foregroundColor: const Color(0xFF0F172A),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: const Text('Annuler'),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -397,6 +490,66 @@ class _NotifTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PasswordField extends StatelessWidget {
+  const _PasswordField({
+    required this.label,
+    required this.hintText,
+    required this.controller,
+    required this.obscureText,
+    this.suffixIcon,
+  });
+
+  final String label;
+  final String hintText;
+  final TextEditingController controller;
+  final bool obscureText;
+  final Widget? suffixIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          obscureText: obscureText,
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: const TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 13,
+            ),
+            suffixIcon: suffixIcon,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF0B6BFF), width: 1),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

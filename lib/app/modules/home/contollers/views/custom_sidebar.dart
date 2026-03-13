@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_getx_app/app/core/service/storage_service.dart';
 import 'package:get/get.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
@@ -123,7 +124,7 @@ class CustomSidebar extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            _buildFooter(isCollapsed),
+            _buildFooter(controller, isCollapsed),
           ],
         ),
       );
@@ -218,17 +219,30 @@ class CustomSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter(bool isCollapsed) {
+  Widget _buildFooter(HomeController controller, bool isCollapsed) {
+    final storage = Get.find<StorageService>();
+    final storedEmail = (storage.read<String>('last_login_email') ?? '').trim();
+    final displayEmail = controller.currentEmail.value.isNotEmpty
+        ? controller.currentEmail.value
+        : storedEmail;
+    final displayName = controller.currentUsername.value == 'Utilisateur' &&
+            displayEmail.isNotEmpty
+        ? displayEmail
+        : controller.currentUsername.value;
+    final displayInitial = displayName.isNotEmpty
+        ? displayName.substring(0, 1).toUpperCase()
+        : 'U';
+
     if (isCollapsed) {
       return Column(
         children: [
           Tooltip(
-            message: 'intern',
+            message: displayName,
             child: CircleAvatar(
               radius: 13,
               backgroundColor: const Color(0xFFDDEAFE),
-              child: const Text(
-                'i',
+              child: Text(
+                displayInitial,
                 style: TextStyle(
                   color: Color(0xFF0B6BFF),
                   fontSize: 12,
@@ -241,7 +255,7 @@ class CustomSidebar extends StatelessWidget {
           Tooltip(
             message: 'Paramètres',
             child: InkWell(
-              onTap: () => Get.toNamed(Routes.SETTINGS),
+              onTap: controller.openSettings,
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 width: 34,
@@ -293,11 +307,11 @@ class CustomSidebar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const CircleAvatar(
+              CircleAvatar(
                 radius: 16,
                 backgroundColor: Color(0xFFDDEAFE),
                 child: Text(
-                  'i',
+                  displayInitial,
                   style: TextStyle(
                     color: Color(0xFF0B6BFF),
                     fontWeight: FontWeight.w700,
@@ -305,14 +319,16 @@ class CustomSidebar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('intern',
+                    Text(displayName,
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     Text(
-                      'intern@sunspace.app',
+                      displayEmail.isEmpty
+                          ? 'email indisponible'
+                          : displayEmail,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: Colors.grey, fontSize: 12),
@@ -323,7 +339,7 @@ class CustomSidebar extends StatelessWidget {
               Tooltip(
                 message: 'Paramètres',
                 child: InkWell(
-                  onTap: () => Get.toNamed(Routes.SETTINGS),
+                  onTap: controller.openSettings,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     width: 28,

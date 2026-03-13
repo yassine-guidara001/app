@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter_getx_app/app/core/service/auth_service.dart';
+import 'package:flutter_getx_app/app/core/service/storage_service.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/professional_profile_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/reservations_controller.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
@@ -27,9 +30,18 @@ class HomeController extends GetxController {
   };
 
   final AuthService _authService = Get.find<AuthService>();
+  final StorageService _storageService = Get.find<StorageService>();
 
   final selectedMenu = 0.obs; // dashboard selected par defaut
   final isSidebarCollapsed = false.obs;
+  final currentUsername = 'Utilisateur'.obs;
+  final currentEmail = ''.obs;
+
+  String get currentUserInitial {
+    final username = currentUsername.value.trim();
+    if (username.isEmpty) return 'U';
+    return username.substring(0, 1).toUpperCase();
+  }
 
   void toggleSidebarCollapse() {
     isSidebarCollapsed.value = !isSidebarCollapsed.value;
@@ -76,20 +88,167 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> _syncCurrentUserForSidebarSection() async {
-    try {
-      await _authService.syncCurrentUserProfile();
-    } catch (_) {
-      // Ignore sync errors here so sidebar navigation stays responsive.
+  Future<void> openSettings() async {
+    await _refreshCurrentUserProfile(force: true);
+
+    if (Get.currentRoute != Routes.SETTINGS) {
+      Get.toNamed(Routes.SETTINGS);
     }
   }
 
+  Future<void> _syncCurrentUserForSidebarSection() async {
+    await _refreshCurrentUserProfile();
+  }
+
   Future<void> _syncCurrentUserForProfileMenu() async {
+    await _refreshCurrentUserProfile(force: true);
+  }
+
+  Future<void> refreshCurrentUserIdentity({bool force = true}) async {
+    await _refreshCurrentUserProfile(force: force);
+  }
+
+  Future<void> _refreshCurrentUserProfile({bool force = false}) async {
+    _hydrateCurrentUserFromStorage();
+
     try {
-      await _authService.syncCurrentUserProfile(force: true);
+      final profile = await _authService.syncCurrentUserProfile(force: force);
+      if (profile != null) {
+        _applyCurrentUser(profile);
+      }
     } catch (_) {
-      // Ignore sync errors here so profile navigation remains responsive.
+      // Ignore sync errors here so sidebar navigation remains responsive.
     }
+  }
+
+  void _hydrateCurrentUserFromStorage() {
+    final cached = _storageService.getUserData();
+    if (cached != null) {
+      _applyCurrentUser(cached);
+    }
+  }
+
+  void _applyCurrentUser(Map<String, dynamic> profile) {
+    final candidateMaps = _collectCandidateMaps(profile);
+
+    currentEmail.value = _extractUserValue(
+      candidateMaps,
+      const ['email', 'mail', 'e_mail'],
+      fallback: '',
+    );
+
+    if (currentEmail.value.isEmpty) {
+      final lastLoginEmail =
+          (_storageService.read<String>('last_login_email') ?? '').trim();
+      if (lastLoginEmail.isNotEmpty) {
+        currentEmail.value = lastLoginEmail;
+      }
+    }
+
+    if (currentEmail.value.isEmpty) {
+      final tokenEmail = _extractEmailFromJwt();
+      if (tokenEmail.isNotEmpty) {
+        currentEmail.value = tokenEmail;
+      }
+    }
+
+    currentUsername.value = _extractUserValue(
+      candidateMaps,
+      const [
+        'username',
+        'name',
+        'fullName',
+        'nom',
+        'displayName',
+        'firstname',
+        'firstName',
+      ],
+      fallback:
+          currentEmail.value.isNotEmpty ? currentEmail.value : 'Utilisateur',
+    );
+
+    if (currentUsername.value == 'Utilisateur' &&
+        currentEmail.value.isNotEmpty) {
+      currentUsername.value = currentEmail.value;
+    }
+  }
+
+  String _extractEmailFromJwt() {
+    final token = (_authService.token ?? '').trim();
+    if (token.isEmpty) return '';
+
+    final parts = token.split('.');
+    if (parts.length < 2) return '';
+
+    try {
+      final normalized = base64Url.normalize(parts[1]);
+      final payload = utf8.decode(base64Url.decode(normalized));
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map) return '';
+
+      final map = Map<String, dynamic>.from(decoded);
+      final email = _extractUserValue(
+        [map],
+        const ['email', 'upn', 'preferred_username', 'username', 'sub'],
+        fallback: '',
+      );
+
+      if (email.contains('@')) {
+        return email;
+      }
+      return '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  List<Map<String, dynamic>> _collectCandidateMaps(Map<String, dynamic> root) {
+    final results = <Map<String, dynamic>>[];
+    final queue = <dynamic>[root];
+
+    while (queue.isNotEmpty && results.length < 40) {
+      final current = queue.removeAt(0);
+
+      if (current is Map) {
+        final map = Map<String, dynamic>.from(current);
+        results.add(map);
+        for (final value in map.values) {
+          if (value is Map || value is List) {
+            queue.add(value);
+          }
+        }
+        continue;
+      }
+
+      if (current is List) {
+        for (final item in current) {
+          if (item is Map || item is List) {
+            queue.add(item);
+          }
+        }
+      }
+    }
+
+    return results;
+  }
+
+  String _extractUserValue(
+    List<Map<String, dynamic>> maps,
+    List<String> keys, {
+    required String fallback,
+  }) {
+    for (final key in keys) {
+      for (final map in maps) {
+        final raw = map[key];
+        if (raw == null) continue;
+
+        final text = raw.toString().trim();
+        if (text.isNotEmpty && text.toLowerCase() != 'null') {
+          return text;
+        }
+      }
+    }
+    return fallback;
   }
 
   /// ===============================
@@ -103,6 +262,8 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _hydrateCurrentUserFromStorage();
+    _refreshCurrentUserProfile();
     fetchUsers();
   }
 
