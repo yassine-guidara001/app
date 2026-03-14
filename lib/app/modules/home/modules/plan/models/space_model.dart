@@ -25,25 +25,26 @@ class SpaceModel {
 }
 
 // Données des espaces avec leurs coordonnées
+// id plan == numéro backend (slug = espace{id}, ex: id=1 → espace1 → "Open Space Principal")
 final List<SpaceModel> planSpaces = [
   SpaceModel(
     id: 1,
     name: 'Open Space Principal',
-    left: 480,
-    top: 250,
-    width: 220,
-    height: 120,
+    left: 245,
+    top: 8,
+    width: 408,
+    height: 175,
     category: 'Espace de travail',
-    capacity: 5,
+    capacity: 6,
     description: 'Grand espace ouvert pour équipes',
   ),
   SpaceModel(
     id: 2,
     name: 'Espace 2',
-    left: 980,
-    top: 120,
-    width: 120,
-    height: 100,
+    left: 840,
+    top: 80,
+    width: 260,
+    height: 155,
     category: 'Salle de reunion',
     capacity: 2,
     description: 'Salle de réunion 2 places',
@@ -51,10 +52,10 @@ final List<SpaceModel> planSpaces = [
   SpaceModel(
     id: 3,
     name: 'Espace 3',
-    left: 980,
-    top: 250,
-    width: 120,
-    height: 100,
+    left: 840,
+    top: 240,
+    width: 260,
+    height: 155,
     category: 'Salle de reunion',
     capacity: 4,
     description: 'Salle de réunion 4 places',
@@ -135,17 +136,6 @@ final List<SpaceModel> planSpaces = [
     category: 'Espace de passage',
     capacity: 1,
     description: 'Escalier',
-  ),
-  SpaceModel(
-    id: 11,
-    name: 'Espace 11',
-    left: 245,
-    top: 8,
-    width: 408,
-    height: 175,
-    category: 'Salle de conference',
-    capacity: 6,
-    description: 'Salle de conférence',
   ),
   SpaceModel(
     id: 12,

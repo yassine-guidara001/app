@@ -44,13 +44,14 @@ class ReservationService {
   }
 
   /// Récupère un espace par son slug
-  /// GET /api/spaces?filters[slug][$eq]=slug
+  /// GET /api/spaces?sort=createdAt:desc&populate=*&filters[slug][$eq]=slug
   static Future<Space?> getSpaceBySlug(String slug) async {
     try {
       final uri = Uri.parse('$baseUrl/spaces').replace(
         queryParameters: {
-          'filters[slug][\$eq]': slug,
+          'sort': 'createdAt:desc',
           'populate': '*',
+          'filters[slug][\$eq]': slug,
         },
       );
 
@@ -76,32 +77,50 @@ class ReservationService {
   }
 
   /// Récupère les équipements associés à un espace via son slug
-  /// GET /api/equipment-assets?filters[spaces][slug][$eq]=slug
+  /// D'abord: GET /api/equipment-assets?...&filters[mystatus][$eq]=Disponible&filters[spaces][slug][$eq]=slug
+  /// Fallback: GET /api/equipment-assets?...&filters[mystatus][$eq]=Disponible
   static Future<List<Equipment>> getEquipmentsBySpaceSlug(String slug) async {
     try {
-      final uri = Uri.parse('$baseUrl/equipment-assets').replace(
+      final scopedUri = Uri.parse('$baseUrl/equipment-assets').replace(
         queryParameters: {
+          'pagination[page]': '1',
+          'pagination[pageSize]': '100',
+          'filters[mystatus][\$eq]': 'Disponible',
           'filters[spaces][slug][\$eq]': slug,
           'populate': '*',
+          'sort': 'createdAt:desc',
         },
       );
 
-      final response = await http.get(
-        uri,
+      final scopedResponse = await http.get(
+        scopedUri,
         headers: await _headers(includeJson: false),
       );
 
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final data = decoded is Map<String, dynamic> ? decoded['data'] : null;
-
-        if (data is List) {
-          return data
-              .map((item) => Equipment.fromJson(item is Map<String, dynamic>
-                  ? item
-                  : {'id': 0, 'documentId': ''}))
-              .toList();
+      if (scopedResponse.statusCode == 200) {
+        final scopedItems = _parseEquipments(scopedResponse.body);
+        if (scopedItems.isNotEmpty) {
+          return scopedItems;
         }
+      }
+
+      final fallbackUri = Uri.parse('$baseUrl/equipment-assets').replace(
+        queryParameters: {
+          'pagination[page]': '1',
+          'pagination[pageSize]': '100',
+          'filters[mystatus][\$eq]': 'Disponible',
+          'populate': '*',
+          'sort': 'createdAt:desc',
+        },
+      );
+
+      final fallbackResponse = await http.get(
+        fallbackUri,
+        headers: await _headers(includeJson: false),
+      );
+
+      if (fallbackResponse.statusCode == 200) {
+        return _parseEquipments(fallbackResponse.body);
       }
 
       return [];
@@ -109,6 +128,20 @@ class ReservationService {
       print('Erreur lors de la récupération des équipements: $e');
       return [];
     }
+  }
+
+  static List<Equipment> _parseEquipments(String responseBody) {
+    final decoded = jsonDecode(responseBody);
+    final data = decoded is Map<String, dynamic> ? decoded['data'] : null;
+
+    if (data is! List) {
+      return [];
+    }
+
+    return data
+        .map((item) => Equipment.fromJson(
+            item is Map<String, dynamic> ? item : {'id': 0, 'documentId': ''}))
+        .toList();
   }
 
   /// Crée une réservation

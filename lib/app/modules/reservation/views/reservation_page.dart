@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/custom_sidebar.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/views/dashboard_topbar.dart';
 import 'package:flutter_getx_app/app/modules/home/modules/plan/models/space_model.dart';
@@ -14,60 +15,54 @@ class ReservationPage extends StatefulWidget {
 }
 
 class _ReservationPageState extends State<ReservationPage> {
-  static const Color _spaceHoverFill = Color(0x6634D399);
+  static const Color _spaceHoverFill = Color(0x8834D399);
   static const Color _spaceHoverBorder = Color(0xFF34D399);
   static const Duration _hoverAnimationDuration = Duration(milliseconds: 180);
 
-  static const Map<int, List<_RegionSegment>> _customRegions = {
-    // Espace 11: forme principale + petite extension droite
-    11: [
-      _RegionSegment(left: 245, top: 8, width: 395, height: 175),
-      _RegionSegment(left: 640, top: 110, width: 58, height: 73),
+  static final Map<int, List<_RegionSegment>> _customRegions = {
+    // Colonne droite: 4 blocs uniformes alignés sur les 4 salles verticales.
+    2: [
+      _RegionSegment(left: 840, top: 80, width: 60, height: 60),
+    ],
+    3: [
+      _RegionSegment(left: 840, top: 240, width: 60, height: 60),
+    ],
+    4: [
+      _RegionSegment(left: 840, top: 400, width: 60, height: 60),
+    ],
+    5: [
+      _RegionSegment(left: 840, top: 560, width: 60, height: 60),
     ],
   };
 
-  SpaceModel? _hoveredSpace;
+  Space? _hoveredSpace;
 
-  String _slugify(String value) {
-    const Map<String, String> accents = {
-      'à': 'a',
-      'â': 'a',
-      'ä': 'a',
-      'é': 'e',
-      'è': 'e',
-      'ê': 'e',
-      'ë': 'e',
-      'î': 'i',
-      'ï': 'i',
-      'ô': 'o',
-      'ö': 'o',
-      'ù': 'u',
-      'û': 'u',
-      'ü': 'u',
-      'ç': 'c',
-    };
-
-    String normalized = value.toLowerCase().trim();
-    accents.forEach((k, v) {
-      normalized = normalized.replaceAll(k, v);
-    });
-
-    normalized = normalized.replaceAll(RegExp(r'[^a-z0-9]+'), '-');
-    normalized = normalized.replaceAll(RegExp(r'^-+|-+$'), '');
-    return normalized;
+  Space _toSpace(SpaceModel spaceModel) {
+    return Space(
+      id: spaceModel.id,
+      name: spaceModel.name,
+      type: spaceModel.category,
+      capacity: spaceModel.capacity,
+      status: spaceModel.isAvailable ? 'available' : 'reserved',
+      isAvailable: spaceModel.isAvailable,
+      slug: 'espace${spaceModel.id}',
+    );
   }
 
-  void openReservationModal(BuildContext context, SpaceModel space) {
-    final String spaceSlug = _slugify(space.name);
+  void openReservationModal(BuildContext context, Space space) {
+    final String spaceSlug = space.slug;
 
     showDialog<void>(
       context: context,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => ReservationModal(spaceSlug: spaceSlug),
+      builder: (_) => ReservationModal(
+        spaceSlug: spaceSlug,
+        spaceDisplayName: space.name,
+      ),
     );
   }
 
-  void _setHoveredSpace(SpaceModel? space) {
+  void _setHoveredSpace(Space? space) {
     if (_hoveredSpace?.id == space?.id) {
       return;
     }
@@ -104,41 +99,29 @@ class _ReservationPageState extends State<ReservationPage> {
       children: [
         const DashboardTopBar(),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1320),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFDCE6F3)),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x120F172A),
-                        blurRadius: 18,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: _buildInteractivePlan(),
-                ),
-              ),
-            ),
+          child: Center(
+            child: _buildOriginalPlan(),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInteractivePlan() {
-    const double svgWidth = 2780;
-    const double svgHeight = 1974;
+  Widget _buildOriginalPlan() {
+    return SvgPicture.asset(
+      'assets/plan.svg',
+      width: 1200,
+      height: 800,
+      fit: BoxFit.contain,
+      placeholderBuilder: (_) => const Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    );
+  }
 
-    // Référentiel actuel des zones cliquables (à recalibrer ensuite si besoin)
-    const double overlayBaseWidth = 1200;
-    const double overlayBaseHeight = 800;
+  Widget _buildInteractivePlan() {
+    const double planBaseWidth = 1200;
+    const double planBaseHeight = 800;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -148,23 +131,23 @@ class _ReservationPageState extends State<ReservationPage> {
 
         // Affiche le plan complet dans la carte (pas de découpe)
         final double fitScale = math.min(
-          availableWidth / svgWidth,
-          availableHeight / svgHeight,
+          availableWidth / planBaseWidth,
+          availableHeight / planBaseHeight,
         );
 
-        final double renderedWidth = svgWidth * fitScale;
-        final double renderedHeight = svgHeight * fitScale;
+        final double renderedWidth = planBaseWidth * fitScale;
+        final double renderedHeight = planBaseHeight * fitScale;
 
-        final double xScale = renderedWidth / overlayBaseWidth;
-        final double yScale = renderedHeight / overlayBaseHeight;
+        final double xScale = fitScale;
+        final double yScale = fitScale;
         final List<_ScaledSpaceRegion> regions =
-          _buildScaledRegions(xScale, yScale);
+            _buildScaledRegions(xScale, yScale);
         final _ScaledSpaceRegion? hoveredRegion = _hoveredSpace == null
-          ? null
-          : regions
-            .where((region) => region.space.id == _hoveredSpace!.id)
-            .cast<_ScaledSpaceRegion?>()
-            .firstOrNull;
+            ? null
+            : regions
+                .where((region) => region.space.id == _hoveredSpace!.id)
+                .cast<_ScaledSpaceRegion?>()
+                .firstOrNull;
 
         return Padding(
           padding: const EdgeInsets.all(12),
@@ -179,7 +162,7 @@ class _ReservationPageState extends State<ReservationPage> {
                     (region) => Positioned(
                       left: region.bounds.left,
                       top: region.bounds.top,
-                      child: _InteractiveSpaceRegion(
+                      child: SpaceWidget(
                         width: region.bounds.width,
                         height: region.bounds.height,
                         localSegments: region.localRects,
@@ -194,13 +177,16 @@ class _ReservationPageState extends State<ReservationPage> {
                             _setHoveredSpace(null);
                           }
                         },
-                        onTap: () => openReservationModal(context, region.space),
+                        onTap: () =>
+                            openReservationModal(context, region.space),
                       ),
                     ),
                   ),
                   if (hoveredRegion != null)
                     _SpaceHoverCard(
                       space: _hoveredSpace!,
+                      displayName: _hoveredSpace!.name,
+                      spaceTag: 'Espace ${_hoveredSpace!.id}',
                       layout: hoveredRegion.layout,
                       availableWidth: renderedWidth,
                       availableHeight: renderedHeight,
@@ -215,33 +201,29 @@ class _ReservationPageState extends State<ReservationPage> {
   }
 
   Widget _buildSvgLayer(double width, double height) {
-    return Image.asset(
-      'assets/plan_original.png',
+    return SvgPicture.asset(
+      'assets/plan_clean.svg',
       width: width,
       height: height,
       fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
-      errorBuilder: (_, __, ___) => const Center(
-        child: Text(
-          'Chargement du plan...',
-          style: TextStyle(color: Color(0xFF64748B)),
-        ),
+      placeholderBuilder: (_) => const Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
       ),
     );
   }
 
   List<_ScaledSpaceRegion> _buildScaledRegions(double xScale, double yScale) {
-    return planSpaces.map((space) {
-      final List<_RegionSegment> sourceSegments =
-          _customRegions[space.id] ??
-              [
-                _RegionSegment(
-                  left: space.left,
-                  top: space.top,
-                  width: space.width,
-                  height: space.height,
-                ),
-              ];
+    return planSpaces.map((spaceModel) {
+      final Space space = _toSpace(spaceModel);
+      final List<_RegionSegment> sourceSegments = _customRegions[space.id] ??
+          [
+            _RegionSegment(
+              left: spaceModel.left,
+              top: spaceModel.top,
+              width: spaceModel.width,
+              height: spaceModel.height,
+            ),
+          ];
 
       final List<Rect> scaled = sourceSegments
           .map(
@@ -272,8 +254,8 @@ class _ReservationPageState extends State<ReservationPage> {
   }
 }
 
-class _InteractiveSpaceRegion extends StatelessWidget {
-  const _InteractiveSpaceRegion({
+class SpaceWidget extends StatelessWidget {
+  const SpaceWidget({
     required this.width,
     required this.height,
     required this.localSegments,
@@ -299,7 +281,7 @@ class _InteractiveSpaceRegion extends StatelessWidget {
     final Path path = Path();
     for (final rect in localSegments) {
       path.addRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(4)),
+        RRect.fromRectAndRadius(rect, Radius.zero),
       );
     }
     return path;
@@ -334,7 +316,7 @@ class _InteractiveSpaceRegion extends StatelessWidget {
                 fillColor: Color.lerp(Colors.transparent, hoverFillColor, t)!,
                 borderColor:
                     Color.lerp(Colors.transparent, hoverBorderColor, t)!,
-                borderWidth: 1.6,
+                borderWidth: 2,
               ),
             );
           },
@@ -387,6 +369,8 @@ class _SpaceRegionPainter extends CustomPainter {
 class _SpaceHoverCard extends StatelessWidget {
   const _SpaceHoverCard({
     required this.space,
+    required this.displayName,
+    required this.spaceTag,
     required this.layout,
     required this.availableWidth,
     required this.availableHeight,
@@ -396,7 +380,9 @@ class _SpaceHoverCard extends StatelessWidget {
   static const double _cardHeight = 114;
   static const double _cardOffset = 14;
 
-  final SpaceModel space;
+  final Space space;
+  final String displayName;
+  final String spaceTag;
   final _SpaceOverlayLayout layout;
   final double availableWidth;
   final double availableHeight;
@@ -409,7 +395,8 @@ class _SpaceHoverCard extends StatelessWidget {
     }
     left = left.clamp(8, availableWidth - _cardWidth - 8);
 
-    final double top = (layout.top - 6).clamp(8, availableHeight - _cardHeight - 8);
+    final double top =
+        (layout.top - 6).clamp(8, availableHeight - _cardHeight - 8);
 
     return Positioned(
       left: left,
@@ -417,76 +404,99 @@ class _SpaceHoverCard extends StatelessWidget {
       child: IgnorePointer(
         child: Material(
           color: Colors.transparent,
-          child: Container(
-            width: _cardWidth,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x1A0F172A),
-                  blurRadius: 24,
-                  offset: Offset(0, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: const Color(0xFF111827)),
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  space.name,
+                child: Text(
+                  spaceTag,
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
+                    fontSize: 20,
+                    color: Color(0xFF111827),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 10),
-                _SpaceInfoRow(label: 'Type', value: space.category),
-                const SizedBox(height: 4),
-                _SpaceInfoRow(
-                  label: 'Capacite',
-                  value: '${space.capacity} personne${space.capacity > 1 ? 's' : ''}',
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Text(
-                      'Statut: ',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF475569),
-                      ),
-                    ),
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: space.isAvailable
-                            ? const Color(0xFF16A34A)
-                            : const Color(0xFFDC2626),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      space.isAvailable ? 'disponible' : 'occupe',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: space.isAvailable
-                            ? const Color(0xFF15803D)
-                            : const Color(0xFFB91C1C),
-                      ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: _cardWidth,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x1A0F172A),
+                      blurRadius: 24,
+                      offset: Offset(0, 10),
                     ),
                   ],
                 ),
-              ],
-            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      displayName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _SpaceInfoRow(label: 'Type', value: space.type),
+                    const SizedBox(height: 4),
+                    _SpaceInfoRow(
+                      label: 'Capacite',
+                      value:
+                          '${space.capacity} personne${space.capacity > 1 ? 's' : ''}',
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Text(
+                          'Statut: ',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF475569),
+                          ),
+                        ),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: space.isAvailable
+                                ? const Color(0xFF16A34A)
+                                : const Color(0xFFDC2626),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          space.status,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: space.isAvailable
+                                ? const Color(0xFF15803D)
+                                : const Color(0xFFB91C1C),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -541,6 +551,26 @@ class _SpaceOverlayLayout {
   final double height;
 }
 
+class Space {
+  const Space({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.capacity,
+    required this.status,
+    required this.isAvailable,
+    required this.slug,
+  });
+
+  final int id;
+  final String name;
+  final String type;
+  final int capacity;
+  final String status;
+  final bool isAvailable;
+  final String slug;
+}
+
 class _RegionSegment {
   const _RegionSegment({
     required this.left,
@@ -562,7 +592,7 @@ class _ScaledSpaceRegion {
     required this.localRects,
   });
 
-  final SpaceModel space;
+  final Space space;
   final Rect bounds;
   final List<Rect> localRects;
 

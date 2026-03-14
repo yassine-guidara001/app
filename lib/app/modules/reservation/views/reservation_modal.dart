@@ -4,9 +4,14 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class ReservationModal extends StatefulWidget {
-  const ReservationModal({super.key, required this.spaceSlug});
+  const ReservationModal({
+    super.key,
+    required this.spaceSlug,
+    required this.spaceDisplayName,
+  });
 
   final String spaceSlug;
+  final String spaceDisplayName;
 
   @override
   State<ReservationModal> createState() => _ReservationModalState();
@@ -441,7 +446,9 @@ class _ReservationModalState extends State<ReservationModal> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  space.name,
+                  widget.spaceDisplayName.isNotEmpty
+                      ? widget.spaceDisplayName
+                      : space.name,
                   style: const TextStyle(
                     fontSize: 31,
                     fontWeight: FontWeight.w800,

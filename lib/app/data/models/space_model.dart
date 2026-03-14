@@ -74,6 +74,33 @@ class Space {
     return DateTime.tryParse(v.toString());
   }
 
+  /// Extrait le texte brut depuis un champ description Strapi v5 (rich text ou string).
+  static String _parseDescription(dynamic v) {
+    if (v == null) return '';
+    if (v is String) return v.trim();
+    if (v is List) {
+      final buffer = StringBuffer();
+      for (final block in v) {
+        if (block is Map) {
+          final children = block['children'];
+          if (children is List) {
+            for (final child in children) {
+              if (child is Map) {
+                final text = child['text'];
+                if (text is String && text.isNotEmpty) {
+                  buffer.write(text);
+                }
+              }
+            }
+          }
+        }
+        if (buffer.isNotEmpty) buffer.write(' ');
+      }
+      return buffer.toString().trim();
+    }
+    return '';
+  }
+
   factory Space.fromJson(Map<String, dynamic> json) {
     final attrs = json["attributes"];
     final a = attrs is Map<String, dynamic> ? attrs : json;
@@ -102,7 +129,7 @@ class Space {
       dailyRate: _toDouble(a["daily_rate"]),
       monthlyRate: _toDouble(a["monthly_rate"]),
       currency: (a["currency"] ?? "TND").toString(),
-      description: (a["description"] ?? "").toString(),
+      description: _parseDescription(a["description"]),
       createdAt: _toDateTime(a["createdAt"]),
       updatedAt: _toDateTime(a["updatedAt"]),
     );
