@@ -1,162 +1,123 @@
 class SpaceModel {
-  final int id;
+  final String id;
   final String name;
-  final double left;
-  final double top;
-  final double width;
-  final double height;
-  final String category;
-  final int capacity;
+  final String description;
+  final int maxPersons;
+  final double pricePerHour;
+  final double pricePerDay;
+  final List<EquipmentModel> equipments;
+  final SpaceType type;
   final bool isAvailable;
-  final String? description;
 
-  SpaceModel({
+  const SpaceModel({
     required this.id,
     required this.name,
-    required this.left,
-    required this.top,
-    required this.width,
-    required this.height,
-    required this.category,
-    required this.capacity,
+    required this.description,
+    required this.maxPersons,
+    required this.pricePerHour,
+    required this.pricePerDay,
+    required this.equipments,
+    required this.type,
     this.isAvailable = true,
-    this.description,
   });
+
+  factory SpaceModel.fromJson(Map<String, dynamic> json) {
+    return SpaceModel(
+      id: json['id']?.toString() ?? '',
+      name: json['attributes']?['name'] ?? json['name'] ?? '',
+      description: json['attributes']?['description'] ?? json['description'] ?? '',
+      maxPersons: json['attributes']?['maxPersons'] ?? json['maxPersons'] ?? 1,
+      pricePerHour: (json['attributes']?['pricePerHour'] ?? json['pricePerHour'] ?? 0).toDouble(),
+      pricePerDay: (json['attributes']?['pricePerDay'] ?? json['pricePerDay'] ?? 0).toDouble(),
+      equipments: [],
+      type: SpaceType.values.firstWhere(
+        (e) => e.name == (json['attributes']?['type'] ?? json['type'] ?? 'openSpace'),
+        orElse: () => SpaceType.openSpace,
+      ),
+      isAvailable: json['attributes']?['isAvailable'] ?? json['isAvailable'] ?? true,
+    );
+  }
 }
 
-// Données des espaces avec leurs coordonnées
-// id plan == numéro backend (slug = espace{id}, ex: id=1 → espace1 → "Open Space Principal")
-final List<SpaceModel> planSpaces = [
-  SpaceModel(
-    id: 1,
-    name: 'Open Space Principal',
-    left: 245,
-    top: 8,
-    width: 408,
-    height: 175,
-    category: 'Espace de travail',
-    capacity: 6,
-    description: 'Grand espace ouvert pour équipes',
-  ),
-  SpaceModel(
-    id: 2,
-    name: 'Espace 2',
-    left: 840,
-    top: 80,
-    width: 260,
-    height: 155,
-    category: 'Salle de reunion',
-    capacity: 2,
-    description: 'Salle de réunion 2 places',
-  ),
-  SpaceModel(
-    id: 3,
-    name: 'Espace 3',
-    left: 840,
-    top: 240,
-    width: 260,
-    height: 155,
-    category: 'Salle de reunion',
-    capacity: 4,
-    description: 'Salle de réunion 4 places',
-  ),
-  SpaceModel(
-    id: 4,
-    name: 'Espace 4',
-    left: 980,
-    top: 380,
-    width: 120,
-    height: 100,
-    category: 'Bureau prive',
-    capacity: 4,
-    description: 'Bureau privé',
-  ),
-  SpaceModel(
-    id: 5,
-    name: 'Espace 5',
-    left: 980,
-    top: 510,
-    width: 120,
-    height: 100,
-    category: 'Cabine telephonique',
-    capacity: 1,
-    description: 'Cabine téléphonique',
-  ),
-  SpaceModel(
-    id: 6,
-    name: 'Espace 6',
-    left: 700,
-    top: 510,
-    width: 120,
-    height: 100,
-    category: 'Zone relax',
-    capacity: 4,
-    description: 'Zone relax',
-  ),
-  SpaceModel(
-    id: 7,
-    name: 'Espace 7',
-    left: 550,
-    top: 510,
-    width: 120,
-    height: 100,
-    category: 'Kitchenette',
-    capacity: 3,
-    description: 'Kitchenette',
-  ),
-  SpaceModel(
-    id: 8,
-    name: 'Espace 8',
-    left: 280,
-    top: 510,
-    width: 120,
-    height: 100,
-    category: 'Espace service',
-    capacity: 2,
-    description: 'WC',
-  ),
-  SpaceModel(
-    id: 9,
-    name: 'Espace 9',
-    left: 280,
-    top: 380,
-    width: 80,
-    height: 80,
-    category: 'Rangement',
-    capacity: 1,
-    description: 'Rangement',
-  ),
-  SpaceModel(
-    id: 10,
-    name: 'Espace 10',
-    left: 180,
-    top: 350,
-    width: 80,
-    height: 120,
-    category: 'Espace de passage',
-    capacity: 1,
-    description: 'Escalier',
-  ),
-  SpaceModel(
-    id: 12,
-    name: 'Espace 12',
-    left: 600,
-    top: 250,
-    width: 120,
-    height: 120,
-    category: 'Bureau open space',
-    capacity: 6,
-    description: 'Bureau open space',
-  ),
-  SpaceModel(
-    id: 13,
-    name: 'Espace 13',
-    left: 750,
-    top: 380,
-    width: 100,
-    height: 100,
-    category: 'Espace client',
-    capacity: 4,
-    description: 'Espace client',
-  ),
-];
+class EquipmentModel {
+  final String id;
+  final String name;
+  final double price;
+
+  const EquipmentModel({
+    required this.id,
+    required this.name,
+    required this.price,
+  });
+
+  factory EquipmentModel.fromJson(Map<String, dynamic> json) {
+    return EquipmentModel(
+      id: json['id']?.toString() ?? '',
+      name: json['attributes']?['name'] ?? json['name'] ?? '',
+      price: (json['attributes']?['price'] ?? json['price'] ?? 0).toDouble(),
+    );
+  }
+}
+
+enum SpaceType {
+  openSpace,
+  meetingRoom,
+  privateOffice,
+  coworking,
+  studio,
+}
+
+extension SpaceTypeExtension on SpaceType {
+  String get label {
+    switch (this) {
+      case SpaceType.openSpace:
+        return 'Open Space';
+      case SpaceType.meetingRoom:
+        return 'Salle de Réunion';
+      case SpaceType.privateOffice:
+        return 'Bureau Privé';
+      case SpaceType.coworking:
+        return 'Coworking';
+      case SpaceType.studio:
+        return 'Studio';
+    }
+  }
+}
+
+class ReservationModel {
+  final String? id;
+  final String spaceId;
+  final DateTime date;
+  final String? startTime;
+  final String? endTime;
+  final bool fullDay;
+  final int participants;
+  final String? userId;
+  final ReservationStatus status;
+
+  const ReservationModel({
+    this.id,
+    required this.spaceId,
+    required this.date,
+    this.startTime,
+    this.endTime,
+    required this.fullDay,
+    required this.participants,
+    this.userId,
+    this.status = ReservationStatus.pending,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'data': {
+      'space': spaceId,
+      'date': date.toIso8601String().split('T').first,
+      'startTime': startTime,
+      'endTime': endTime,
+      'fullDay': fullDay,
+      'participants': participants,
+      'status': status.name,
+    }
+  };
+}
+
+enum ReservationStatus { pending, confirmed, cancelled }

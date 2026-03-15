@@ -40,13 +40,13 @@ class CustomSidebar extends StatelessWidget {
                   children: [
                     _menuItem(controller, 0, Icons.grid_view, 'Tableau de bord',
                         Routes.HOME, isCollapsed),
-                    _menuItem(
-                        controller,
-                        1,
-                        Icons.location_on_outlined,
-                        'Réserver un espace',
-                        Routes.RESERVATION_PLAN,
-                        isCollapsed),
+                   _menuItem(
+    controller,
+    1,
+    Icons.location_on_outlined,
+    'Réserver un espace',
+    Routes.PLAN,               // ← route correcte
+    isCollapsed), 
                     _menuItem(
                         controller,
                         2,

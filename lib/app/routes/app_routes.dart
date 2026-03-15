@@ -26,12 +26,13 @@ abstract class Routes {
   static const COMMUNICATION = '/communication';
   static const CREATE_SPACE = '/create-space';
   static const STUDENT_SPACES = '/student-spaces';
-  static const RESERVATION_PLAN = '/reservation-plan';
+
+  /// PLAN — une seule constante, utilisée partout
+  static const PLAN = '/plan';
 
   /// AUTRES
   static const PROFILE = '/profile';
   static const USER_DETAILS = '/user-details';
   static const SETTINGS = '/settings';
   static const ABOUT = '/about';
-  static const PLAN = '/plan';
 }

@@ -7,6 +7,7 @@ import 'package:flutter_getx_app/app/modules/home/contollers/professional_profil
 import 'package:flutter_getx_app/app/modules/home/contollers/reservations_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/associations_controller.dart';
 import 'package:flutter_getx_app/app/modules/home/contollers/teacher_students_controller.dart';
+import 'package:flutter_getx_app/app/modules/reservation/reserver%20espace%20screen.dart';
 import 'package:flutter_getx_app/controllers/assignments_controller.dart';
 import 'package:flutter_getx_app/app/data/services/associations_service.dart';
 import 'package:flutter_getx_app/app/data/services/teacher_students_service.dart';
@@ -33,8 +34,9 @@ import 'package:flutter_getx_app/app/modules/spaces/controllers/spaces_controlle
 import 'package:flutter_getx_app/app/modules/spaces/views/spaces_view.dart';
 import 'package:flutter_getx_app/app/modules/spaces/views/create_space_view.dart';
 import 'package:flutter_getx_app/app/modules/spaces/views/student_floor_plan_page.dart';
-import 'package:flutter_getx_app/app/modules/reservation/views/reservation_page.dart';
-import 'package:flutter_getx_app/app/modules/home/modules/plan/views/plan_view.dart';
+
+// ✅ Import de la nouvelle page plan de réservation
+
 import 'package:get/get.dart';
 
 // Pages
@@ -52,7 +54,7 @@ class AppPages {
     GetPage(name: Routes.LOGIN, page: () => LoginPage()),
     GetPage(name: Routes.REGISTER, page: () => const RegisterPage()),
 
-    // Dashboard Home / Utilisateurs
+    // Dashboard
     GetPage(
       name: Routes.HOME,
       page: () => const DashboardView(),
@@ -61,7 +63,15 @@ class AppPages {
       }),
     ),
 
-    // Autres pages du dashboard
+    // ✅ Réserver un espace — plan interactif
+    GetPage(
+      name: Routes.PLAN,
+      page: () => const ReserverEspaceScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(HomeController(), permanent: true);
+      }),
+    ),
+
     GetPage(
       name: Routes.SPACES,
       page: () => SpacesView(),
@@ -82,13 +92,6 @@ class AppPages {
       page: () => const StudentFloorPlanPage(),
       binding: BindingsBuilder(() {
         Get.lazyPut<SpaceController>(() => SpaceController(), fenix: true);
-        Get.put(HomeController(), permanent: true);
-      }),
-    ),
-    GetPage(
-      name: Routes.RESERVATION_PLAN,
-      page: () => const ReservationPage(),
-      binding: BindingsBuilder(() {
         Get.put(HomeController(), permanent: true);
       }),
     ),
@@ -239,20 +242,15 @@ class AppPages {
       page: () => const SettingsView(),
       binding: BindingsBuilder(() {
         Get.put(HomeController(), permanent: true);
-        Get.lazyPut<SettingsController>(() => SettingsController(),
-            fenix: true);
+        Get.lazyPut<SettingsController>(
+          () => SettingsController(),
+          fenix: true,
+        );
       }),
     ),
     GetPage(
       name: Routes.COMMUNICATION,
       page: () => HomeView(),
-      binding: BindingsBuilder(() {
-        Get.put(HomeController(), permanent: true);
-      }),
-    ),
-    GetPage(
-      name: Routes.PLAN,
-      page: () => const PlanView(),
       binding: BindingsBuilder(() {
         Get.put(HomeController(), permanent: true);
       }),

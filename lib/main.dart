@@ -3,13 +3,9 @@ import 'package:flutter_getx_app/app/modules/home/contollers/home_controller.dar
 import 'package:flutter_getx_app/app/modules/home/contollers/auth_controller.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-
-// Services
 import 'package:flutter_getx_app/app/core/service/http_service.dart';
 import 'package:flutter_getx_app/app/core/service/storage_service.dart';
 import 'package:flutter_getx_app/app/core/service/auth_service.dart';
-
-// Routes
 import 'package:flutter_getx_app/app/routes/app_pages.dart';
 import 'package:flutter_getx_app/app/routes/app_routes.dart';
 import 'package:intl/date_symbol_data_local.dart';

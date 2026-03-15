@@ -37,6 +37,10 @@ dependencies:
 
   # SECURE STORAGE (optionnel)
   flutter_secure_storage: ^9.0.0
+
+  # ✅ WebView pour afficher le SVG nativement
+  webview_flutter: ^4.4.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -48,4 +52,3 @@ flutter:
   assets:
     - assets/
     - assets/plan.svg
-    - assets/plan_clean.svg
